@@ -2,6 +2,8 @@
 
 A short listening walk. A private local audio model. A second visit that helps you notice what changed in your recordings.
 
+![Soundwalk Atlas interface](docs/ui-redesign.jpg)
+
 Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. No real outdoor trial or contest entry is claimed.
 
 ## The experience
@@ -69,7 +71,7 @@ CLAP research: Wu et al., *Large-scale Contrastive Language-Audio Pretraining wi
 
 ## Submission status
 
-Working software and synthetic tests do not replace two real outdoor visits, consented original media and an independently labelled evaluation. These are still required to substantiate our submission narrative. The user must review the final contest entry and applicable obligations before publishing. No DEV post or GitHub remote publication is performed by this local build.
+Working software and synthetic tests do not replace two real outdoor visits, consented original media and an independently labelled evaluation. These are still required to substantiate our submission narrative. The user must review the final contest entry and applicable obligations before publishing. No DEV post or contest entry has been published. Publishing this repository does not submit an entry.
 
 ## Field and submission guides
 
