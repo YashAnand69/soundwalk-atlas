@@ -1,0 +1,1 @@
+"""Local Soundwalk Atlas service."""

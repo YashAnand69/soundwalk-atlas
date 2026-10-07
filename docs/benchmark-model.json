@@ -1,0 +1,71 @@
+{
+  "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "inputSha256": "d1173f406b854e92e1f1bbbc99775f79f22ebd228a570d223cca005e2bd591a5",
+  "source": "Synthetic generated fixture, not outdoor evidence",
+  "offlineEnvironment": true,
+  "socketConnectionsBlocked": true,
+  "peakRssMiB": 1023.5,
+  "runs": [
+    {
+      "seconds": 2.689,
+      "rssMiB": 1023.3,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "People and voices",
+            "score": 0.2904
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "window": "First 10 seconds at 48 kHz mono; shorter clips zero-padded. Vocabulary v1. Relative similarities, not confidence probabilities."
+      }
+    },
+    {
+      "seconds": 0.046,
+      "rssMiB": 1023.3,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "People and voices",
+            "score": 0.2904
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "window": "First 10 seconds at 48 kHz mono; shorter clips zero-padded. Vocabulary v1. Relative similarities, not confidence probabilities."
+      }
+    },
+    {
+      "seconds": 0.045,
+      "rssMiB": 1023.3,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "People and voices",
+            "score": 0.2904
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "window": "First 10 seconds at 48 kHz mono; shorter clips zero-padded. Vocabulary v1. Relative similarities, not confidence probabilities."
+      }
+    }
+  ]
+}
