@@ -74,3 +74,7 @@ Working software and synthetic tests do not replace two real outdoor visits, con
 ## Field and submission guides
 
 Use [the field-trial guide](docs/FIELD-TRIAL.md) for two genuine outdoor visits and [the submission checklist](docs/SUBMISSION-CHECKLIST.md) for the final article. Review evidence lives in [stage reviews](docs/STAGE-REVIEWS.md).
+
+## Interactive interface
+
+The redesigned field-instrument interface includes an original day/dusk landscape with selectable visual layers and pausable motion, a one-minute listening timer, real journal totals and keyboard-accessible station navigation. See [UI review evidence](docs/UI-REDESIGN-REVIEW.md). Illustrations are clearly imagined; they never claim to represent live audio or a measured environment.

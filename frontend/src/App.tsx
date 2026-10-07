@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import {
+  FieldHero,
+  JournalStats,
+  ListeningTimer,
+  StationRail,
+} from "./FieldInstrument";
 import type { Clip, Config, Route, State, Visit } from "./types";
 import { clipSummary, stopClips } from "./types";
 const empty: State = { routes: [], visits: [], clips: [] };
@@ -18,6 +24,37 @@ export default function App() {
     ),
     [title, setTitle] = useState("");
   const mounted = useRef(true);
+  const workspace = useRef<HTMLDivElement>(null);
+  const preparation = useRef<HTMLDetailsElement>(null);
+  function openWorkspace(prepare = false) {
+    setTab("walk");
+    if (prepare && preparation.current) preparation.current.open = true;
+    window.requestAnimationFrame(() => {
+      const target = prepare ? preparation.current : workspace.current;
+      target?.scrollIntoView({
+        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")
+          .matches
+          ? "instant"
+          : "smooth",
+        block: "start",
+      });
+      if (prepare)
+        preparation.current
+          ?.querySelector("input")
+          ?.focus({ preventScroll: true });
+      else workspace.current?.focus({ preventScroll: true });
+    });
+  }
+  function selectStation(id: string) {
+    const target = document.getElementById("station-" + id);
+    target?.scrollIntoView({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "start",
+    });
+    target?.focus({ preventScroll: true });
+  }
   const route = state.routes.find((r) => r.id === routeId),
     visits = state.visits.filter((v) => v.routeId === routeId),
     visit = visits.find((v) => v.id === visitId);
@@ -176,36 +213,11 @@ export default function App() {
         </div>
       </header>
       <main>
-        <section className="hero">
-          <div>
-            <p className="eyebrow">A FIELD GUIDE TO PAYING ATTENTION</p>
-            <h1>
-              Make room
-              <br />
-              to <i>listen.</i>
-            </h1>
-            <p className="intro">
-              Step outside. Hear what’s already there.
-              <br />A small listening walk, a journal that stays yours.
-            </p>
-            <div className="hero-meta">
-              <span>3 stops</span>
-              <span>10 seconds per recording</span>
-              <span>No cloud inference</span>
-            </div>
-          </div>
-          <div className="art" aria-hidden="true">
-            <div className="sun" />
-            <div className="ring r1" />
-            <div className="ring r2" />
-            <div className="ring r3" />
-            <div className="hill h1" />
-            <div className="hill h2" />
-            <div className="stem s1" />
-            <div className="stem s2" />
-            <div className="art-caption">THE WORLD IS ALREADY PLAYING.</div>
-          </div>
-        </section>
+        <FieldHero
+          onBegin={() => openWorkspace()}
+          onPrepare={() => openWorkspace(true)}
+        />
+        <JournalStats state={state} />
         {error && (
           <div className="alert" role="alert">
             {error}
@@ -264,7 +276,7 @@ export default function App() {
             Export journal ↗
           </a>
         </nav>
-        <div className="workspace">
+        <div className="workspace" ref={workspace} tabIndex={-1}>
           <aside>
             <p className="eyebrow">YOUR PLACES</p>
             {state.routes.map((r) => (
@@ -279,7 +291,7 @@ export default function App() {
                 <small>{r.stops.length} listening stops</small>
               </button>
             ))}
-            <details open={!state.routes.length}>
+            <details ref={preparation} open={!state.routes.length}>
               <summary>+ Prepare a new walk</summary>
               <form onSubmit={createRoute}>
                 <label>
@@ -397,6 +409,7 @@ export default function App() {
                         tool.
                       </p>
                     </div>
+                    <ListeningTimer />
                     <div className="visit-controls">
                       <label>
                         Visit
@@ -429,9 +442,19 @@ export default function App() {
                     </div>
                     {visit && (
                       <>
+                        <StationRail
+                          route={route}
+                          state={state}
+                          visitId={visit.id}
+                          onSelect={selectStation}
+                        />
                         {route.stops.map((stop, index) => (
                           <div className="stop" key={stop.id}>
-                            <div className="stop-heading">
+                            <div
+                              className="stop-heading"
+                              id={"station-" + stop.id}
+                              tabIndex={-1}
+                            >
                               <span className="number">
                                 {String(index + 1).padStart(2, "0")}
                               </span>
@@ -771,7 +794,7 @@ function ClipCard({
         </p>
       )}
       <button
-        className="secondary"
+        className={`secondary ${clip.status === "analysing" ? "analysing" : ""}`}
         disabled={busy || !canAnalyse || clip.status === "analysing"}
         onClick={onAnalyse}
       >
