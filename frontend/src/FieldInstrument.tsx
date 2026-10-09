@@ -18,11 +18,16 @@ export function ArrowIcon() {
 export function FieldHero({
   onBegin,
   onPrepare,
+  motionPaused: controlledPause,
+  onToggleMotion,
 }: {
   onBegin: () => void;
   onPrepare: () => void;
+  motionPaused?: boolean;
+  onToggleMotion?: () => void;
 }) {
-  const [motionPaused, setMotionPaused] = useState(false);
+  const [localPause, setLocalPause] = useState(false);
+  const motionPaused = controlledPause ?? localPause;
   const [scene, setScene] = useState<"day" | "dusk">("day");
   const [layers, setLayers] = useState({
     birds: true,
@@ -34,6 +39,9 @@ export function FieldHero({
       className={`hero field-hero scene-${scene} ${motionPaused ? "motion-paused" : ""}`}
     >
       <div className="hero-copy">
+        <span className="hero-folio" aria-hidden="true">
+          FIELD NOTES / 001
+        </span>
         <p className="eyebrow">
           <span className="live-dot" /> A FIELD GUIDE TO PAYING ATTENTION
         </p>
@@ -65,7 +73,11 @@ export function FieldHero({
           type="button"
           className="motion-toggle"
           aria-pressed={motionPaused}
-          onClick={() => setMotionPaused((paused) => !paused)}
+          onClick={() =>
+            onToggleMotion
+              ? onToggleMotion()
+              : setLocalPause((paused) => !paused)
+          }
         >
           {motionPaused ? "Resume motion" : "Pause motion"}
         </button>
@@ -118,6 +130,16 @@ export function FieldHero({
             </pattern>
           </defs>
           <rect width="600" height="490" rx="20" fill="url(#landscape-sky)" />
+          <g
+            className="sun-halo"
+            fill="none"
+            stroke="#faf0c7"
+            strokeOpacity=".22"
+          >
+            <circle cx="445" cy="118" r="58" />
+            <circle cx="445" cy="118" r="74" />
+            <circle cx="445" cy="118" r="90" />
+          </g>
           <circle
             className="landscape-sun"
             cx="445"
@@ -269,6 +291,10 @@ export function FieldHero({
               {layer[0].toUpperCase() + layer.slice(1)}
             </button>
           ))}
+        </div>
+        <div className="scene-annotation" aria-hidden="true">
+          <span>AN IMAGINED PLACE</span>
+          <span>THREE MOMENTS TO LISTEN</span>
         </div>
         <p className="illustration-caption">
           An imagined landscape. Explore the visual layers — no audio plays.

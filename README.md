@@ -2,7 +2,7 @@
 
 A short listening walk. A private local audio model. A second visit that helps you notice what changed in your recordings.
 
-![Soundwalk Atlas interface](docs/ui-upgrade.png)
+![Soundwalk Atlas interface](docs/premium-hero.png)
 
 Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. No real outdoor trial or contest entry is claimed.
 
@@ -73,7 +73,7 @@ CLAP research: Wu et al., *Large-scale Contrastive Language-Audio Pretraining wi
 
 ## Submission status
 
-Working software and synthetic tests do not replace two real outdoor visits, consented original media and an independently labelled evaluation. These are still required to substantiate our submission narrative. The user must review the final contest entry and applicable obligations before publishing. No DEV post or contest entry has been published. Publishing this repository does not submit an entry.
+The official challenge permits a working synthetic demo with truthful limitations. Genuine outdoor use strengthens the Touch Grass story; our recommended two-visit trial is not a formal entry prerequisite. An independent evaluation is necessary before making accuracy claims, which this entry does not make. The user must review the final contest entry and applicable obligations before publishing. No DEV post or contest entry has been published. Publishing this repository does not submit an entry.
 
 ## Field and submission guides
 
@@ -92,3 +92,9 @@ A private ZIP backup includes original audio, notes, reviews and model provenanc
 Draft text survives internal navigation/reload in this browser's local storage; a pending selected file survives internal navigation but must be reselected after browser reload. Clearing browser data clears unsaved drafts. Saving is still necessary for portable records.
 
 See [upgrade review](docs/UPGRADE-REVIEW.md) and [evaluation protocol](docs/evaluation/README.md). Expanded prompts are a development improvement, not proof of independent field accuracy.
+
+## Submission package and public demo
+
+[Watch the public captioned walkthrough](https://yashanand69.github.io/soundwalk-atlas/#demo). The static demo page shows an edited 72-second sequence of actual application screens with synthetic data; it does not host the journal service or expose private recordings. [DEV draft](docs/DEV-SUBMISSION.md), [demo transcript](docs/demo/TRANSCRIPT.md) and [final checklist](docs/SUBMISSION-CHECKLIST.md) are provided. The article is prepared but not published.
+
+The new scroll-led trail draws an imagined path and moves a marker as the narrative scrolls, with slight depth movement in the landscape. It is not a real route tracker. Reveal motion is progressive enhancement, respects keyboard focus and reduced-motion preferences, and can be paused.

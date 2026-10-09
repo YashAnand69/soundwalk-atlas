@@ -2090,31 +2090,6 @@ footer {
   padding: 3px 8px;
   color: #4a6e42;
 }
-@keyframes field-arrive {
-  from {
-    opacity: 0.72;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.field-hero .hero-copy {
-  animation: field-arrive 0.65s ease-out both;
-}
-.field-hero .atlas-art {
-  animation: field-arrive 0.85s ease-out both;
-}
-@supports (animation-timeline: view()) {
-  .stop,
-  .comparison-row,
-  .walk-card {
-    animation: field-arrive linear both;
-    animation-timeline: view();
-    animation-range: entry 0% cover 18%;
-  }
-}
 .app:has(.motion-paused) .bird-flight,
 .app:has(.motion-paused) .wind-line,
 .app:has(.motion-paused) .water-current,
@@ -2380,5 +2355,12 @@ footer {
   }
 }
 
-.restore-confirm { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
-.restore-confirm p { flex-basis: 100%; }
+.restore-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+.restore-confirm p {
+  flex-basis: 100%;
+}

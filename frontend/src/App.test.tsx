@@ -64,7 +64,13 @@ function setup(
     if (url === "/api/observations")
       return Response.json({ id: "o", ...JSON.parse(String(init?.body)) });
     if (url === "/api/clips") return Response.json(clip);
-    if (url === "/api/restore") return Response.json({restoredRoutes: 1, restoredVisits: 2, restoredClips: 3, restoredObservations: 4});
+    if (url === "/api/restore")
+      return Response.json({
+        restoredRoutes: 1,
+        restoredVisits: 2,
+        restoredClips: 3,
+        restoredObservations: 4,
+      });
     if (url.endsWith("/review"))
       return Response.json({ ...clip, review: JSON.parse(String(init?.body)) });
     throw new Error("Unexpected " + url);
@@ -484,32 +490,47 @@ describe("analysis interval and quality provenance", () => {
     await screen.findByRole("heading", { name: "Park loop" });
     expect(screen.getByText(/Effectively silent digital segment/)).toBeTruthy();
     expect(screen.getByText(/No usable candidate match/)).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Footsteps" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Footsteps" })).toBeTruthy();
   });
 });
-
 
 describe("portable backup confirmation", () => {
   it("does not transmit an archive before explicit confirmation and shows restore counts", async () => {
     const fetch = setup();
     await screen.findByText("morning.wav");
-    const file = new File(["synthetic archive"], "journal.zip", {type: "application/zip"});
-    fireEvent.change(screen.getByLabelText("Restore backup"), {target: {files: [file]}});
-    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(false);
-    fireEvent.click(screen.getByRole("button", {name: "Restore as new walks"}));
-    await screen.findByText("Restored 1 walks, 2 visits, 3 recordings and 4 written observations.");
+    const file = new File(["synthetic archive"], "journal.zip", {
+      type: "application/zip",
+    });
+    fireEvent.change(screen.getByLabelText("Restore backup"), {
+      target: { files: [file] },
+    });
+    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(
+      false,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Restore as new walks" }),
+    );
+    await screen.findByText(
+      "Restored 1 walks, 2 visits, 3 recordings and 4 written observations.",
+    );
     const call = fetch.mock.calls.find(([url]) => url === "/api/restore");
     expect(call?.[1]?.body).toBeInstanceOf(FormData);
-    expect(screen.queryByRole("region", {name: "Confirm backup restore"})).toBeNull();
+    expect(
+      screen.queryByRole("region", { name: "Confirm backup restore" }),
+    ).toBeNull();
   });
   it("cancels a selected archive without a restore request", async () => {
     const fetch = setup();
     await screen.findByText("morning.wav");
-    fireEvent.change(screen.getByLabelText("Restore backup"), {target: {files: [new File(["fixture"], "journal.zip")]}});
-    fireEvent.click(screen.getByRole("button", {name: "Cancel restore"}));
-    expect(screen.queryByRole("region", {name: "Confirm backup restore"})).toBeNull();
-    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(false);
+    fireEvent.change(screen.getByLabelText("Restore backup"), {
+      target: { files: [new File(["fixture"], "journal.zip")] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel restore" }));
+    expect(
+      screen.queryByRole("region", { name: "Confirm backup restore" }),
+    ).toBeNull();
+    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(
+      false,
+    );
   });
 });

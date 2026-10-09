@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { ListeningPrelude } from "./ListeningPrelude";
+import { useScrollMotion } from "./useScrollMotion";
 import {
   FieldHero,
   JournalStats,
@@ -19,6 +21,9 @@ export default function App() {
     [visitId, setVisitId] = useState(""),
     [compareId, setCompareId] = useState("");
   const [focus, setFocus] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
+  const appRoot = useRef<HTMLDivElement>(null);
+  useScrollMotion(appRoot);
   const [jobs, setJobs] = useState<
     Record<string, { id: string; status: string }>
   >({});
@@ -305,11 +310,18 @@ export default function App() {
     }
   }
   return (
-    <div className={"app " + (focus ? "focus-mode" : "")}>
+    <div
+      ref={appRoot}
+      className={`app ${focus ? "focus-mode" : ""} ${motionPaused ? "motion-paused" : ""}`}
+    >
+      <div className="reading-progress" aria-hidden="true" />
       <header>
         <a className="brand" href="#">
           <span className="brand-icon">◌</span> Soundwalk <em>Atlas</em>
         </a>
+        <span className="header-edition" aria-hidden="true">
+          A PERSONAL FIELD GUIDE / VOL. 01
+        </span>
         <div className="privacy">
           <span /> Local & private
         </div>
@@ -317,10 +329,24 @@ export default function App() {
       <main>
         {!focus && (
           <FieldHero
+            motionPaused={motionPaused}
+            onToggleMotion={() => setMotionPaused((p) => !p)}
             onBegin={() => openWorkspace()}
             onPrepare={() => openWorkspace(true)}
           />
         )}
+        {!focus && <ListeningPrelude paused={motionPaused} />}
+        <div className="journal-intro" data-reveal>
+          <div>
+            <p className="eyebrow">YOUR OWN SMALL ATLAS</p>
+            <h2>Your field journal.</h2>
+          </div>
+          <p>
+            Keep what you noticed.
+            <br />
+            Return when the world sounds different.
+          </p>
+        </div>
         <JournalStats state={state} />
         {error && (
           <div className="alert" role="alert">
@@ -377,56 +403,88 @@ export default function App() {
           >
             02 <span>Compare visits</span>
           </button>
-          <button
-            className="refresh-button"
-            disabled={busy}
-            onClick={() =>
-              act(async () => {
-                setConfig(await request<Config>("/config"));
-                await refresh();
-              })
-            }
-          >
-            Refresh status ↻
-          </button>
-          <a href="/api/export" download>
-            Export JSON records ↗
-          </a>
-          <a href="/api/backup" download>
-            Private backup + audio ↗
-          </a>
-          <label className="restore-control">
-            Restore backup
-            <input
-              type="file"
-              accept=".zip"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                if (file.size > 200 * 1024 * 1024) {
-                  setRestoreResult("Backup exceeds 200 MB. Choose a smaller archive.");
-                  e.target.value = "";
-                  return;
+          <details className="journal-tools">
+            <summary>
+              Journal tools <span aria-hidden="true">↗</span>
+            </summary>
+            <div className="journal-tools-menu">
+              <button
+                className="refresh-button"
+                disabled={busy}
+                onClick={() =>
+                  act(async () => {
+                    setConfig(await request<Config>("/config"));
+                    await refresh();
+                  })
                 }
-                setPendingBackup(file);
-                setRestoreResult("");
-                e.target.value = "";
-              }}
-            />
-          </label>
+              >
+                Refresh status ↻
+              </button>
+              <a href="/api/export" download>
+                Export JSON records ↗
+              </a>
+              <a href="/api/backup" download>
+                Private backup + audio ↗
+              </a>
+              <label className="restore-control">
+                Restore backup
+                <input
+                  type="file"
+                  accept=".zip"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 200 * 1024 * 1024) {
+                      setRestoreResult(
+                        "Backup exceeds 200 MB. Choose a smaller archive.",
+                      );
+                      e.target.value = "";
+                      return;
+                    }
+                    setPendingBackup(file);
+                    setRestoreResult("");
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+          </details>
         </nav>
         {pendingBackup && (
-          <div className="notice restore-confirm" role="region" aria-label="Confirm backup restore">
-            <p>Restore {pendingBackup.name} as new walks? This includes private audio and notes. Existing walks will not be overwritten.</p>
-            <button disabled={busy} onClick={() => void act(async () => {
-              const body = new FormData();
-              body.append("file", pendingBackup);
-              const result = await request<{restoredRoutes: number; restoredVisits: number; restoredClips: number; restoredObservations: number}>("/restore", {method: "POST", body});
-              await refresh();
-              setRestoreResult(`Restored ${result.restoredRoutes} walks, ${result.restoredVisits} visits, ${result.restoredClips} recordings and ${result.restoredObservations} written observations.`);
-              setPendingBackup(null);
-            })}>Restore as new walks</button>
-            <button disabled={busy} onClick={() => setPendingBackup(null)}>Cancel restore</button>
+          <div
+            className="notice restore-confirm"
+            role="region"
+            aria-label="Confirm backup restore"
+          >
+            <p>
+              Restore {pendingBackup.name} as new walks? This includes private
+              audio and notes. Existing walks will not be overwritten.
+            </p>
+            <button
+              disabled={busy}
+              onClick={() =>
+                void act(async () => {
+                  const body = new FormData();
+                  body.append("file", pendingBackup);
+                  const result = await request<{
+                    restoredRoutes: number;
+                    restoredVisits: number;
+                    restoredClips: number;
+                    restoredObservations: number;
+                  }>("/restore", { method: "POST", body });
+                  await refresh();
+                  setRestoreResult(
+                    `Restored ${result.restoredRoutes} walks, ${result.restoredVisits} visits, ${result.restoredClips} recordings and ${result.restoredObservations} written observations.`,
+                  );
+                  setPendingBackup(null);
+                })
+              }
+            >
+              Restore as new walks
+            </button>
+            <button disabled={busy} onClick={() => setPendingBackup(null)}>
+              Cancel restore
+            </button>
           </div>
         )}
         {restoreResult && (
@@ -587,6 +645,7 @@ export default function App() {
                 {tab === "walk" ? (
                   <>
                     <div
+                      data-reveal
                       className={"walk-card " + (focus ? "compact-card" : "")}
                     >
                       <div className="card-top">
@@ -652,7 +711,7 @@ export default function App() {
                           onSelect={selectStation}
                         />
                         {route.stops.map((stop, index) => (
-                          <div className="stop" key={stop.id}>
+                          <div className="stop" key={stop.id} data-reveal>
                             <div
                               className="stop-heading"
                               id={"station-" + stop.id}
@@ -875,7 +934,11 @@ export default function App() {
                     {visitId && compareId && visitId !== compareId ? (
                       <div className="comparison">
                         {route.stops.map((s) => (
-                          <div className="comparison-row" key={s.id}>
+                          <div
+                            className="comparison-row"
+                            key={s.id}
+                            data-reveal
+                          >
                             <h3>{s.name}</h3>
                             {[visitId, compareId].map((id) => (
                               <div key={id}>

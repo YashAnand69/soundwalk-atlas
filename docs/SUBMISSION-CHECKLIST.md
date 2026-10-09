@@ -1,47 +1,42 @@
 # Hacktoberfest Week 1 submission checklist
 
-Prepared October 7, 2026 from the task's official-rules research. This checklist does not accept contest terms, certify personal eligibility, or publish an entry. Recheck the live official template and rules immediately before publication.
+Live official challenge, template and Week 1 rules checked October 9, 2026. This file prepares an entry; it does not publish one or accept contest terms.
 
-[Challenge](https://dev.to/challenges/hacktoberfest-week1-2026-10-05) · [Week 1 rules](https://dev.to/page/hacktoberfest-week1-2026-10-05-contest-rules) · [General rules](https://dev.to/page/official-hackathon-rules)
+[Challenge and official template](https://dev.to/challenges/hacktoberfest-week1-2026-10-05) · [Week 1 rules](https://dev.to/page/hacktoberfest-week1-2026-10-05-contest-rules) · [General rules](https://dev.to/page/official-hackathon-rules)
 
-The researched close is **October 12, 2026 at 12:29 p.m. IST**; aim to finish October 11. Only one entry is judged. Existing upstream contributions do not constitute this challenge project.
+**Deadline: October 11, 2026 at 11:59 p.m. PDT = October 12 at 12:29 p.m. IST.** Publish by October 11 IST for margin. The rules require a published DEV template entry, a new in-window project/repository, a demo link or video, source link and an open-innovation explanation. One entry is judged; a public deployment is optional when a video demo is provided. Writing is the highest-weight criterion. [Official requirements](https://dev.to/page/hacktoberfest-week1-2026-10-05-contest-rules)
 
-## Engineering and evidence
+## Prepared engineering and materials
 
-- [ ] New project and repository development fall within the official entry period; retain dated history.
-- [ ] Document exact dependency/model revision, model weight checksum and licenses separately from audio rights.
-- [ ] Reproduce installation, production frontend build, API tests and real cached local model inference.
-- [ ] Identify test doubles as test doubles and synthetic audio as synthetic audio.
-- [ ] Confirm a complete route → import → analysis → human correction → repeat-visit comparison → export/delete journey.
-- [ ] Complete two genuine outdoor visits following [FIELD-TRIAL.md](FIELD-TRIAL.md); report failures, missing samples and actual screen interactions.
-- [ ] Include an independently labelled exploratory evaluation if making accuracy claims; publish raw counts and limitations.
-- [ ] Record actual hardware, download/storage size and measured warm/cold processing behavior.
-- [ ] No exact private locations, personal recordings, credentials or unconsented bystander media enter the public repository/demo.
-- [ ] Clearly separate one-time asset download from offline runtime. Do not claim the phone can call the Mac's localhost.
-- [ ] Export wording accurately says JSON records without audio; no unsupported archive import/PWA features are advertised.
+- [x] Public source: https://github.com/YashAnand69/soundwalk-atlas. Local dated history starts October 7 within the entry window; retain history and verify final public history at publication.
+- [x] Pinned model revision/checksum, dependencies, application/model/media licensing and setup instructions documented.
+- [x] October 9 review records 57 Python and 31 interface tests, build/type checks, real cached local inference and real browser/HTTP workflow checks. These are historical performed checks, not a substitute for testing subsequent changes.
+- [x] Synthetic fixtures and inference test doubles explicitly distinguished from field evidence and real model runs.
+- [x] Notes without audio, selected intervals, human rejection/correction, comparison, persistence, export/delete and private additive ZIP backup restoration implemented and reviewed.
+- [x] Hardware-specific synthetic timings documented; no confidence, species, ambient-decibel, ecological or independent-accuracy claim.
+- [x] One-time asset download separated from local runtime. Phone recorder → laptop transfer documented; no on-phone inference/PWA claim.
+- [x] DEV draft uses the live template headings and required `devchallenge` / `hf26challenge` tags: [DEV-SUBMISSION.md](DEV-SUBMISSION.md).
+- [x] Truthful Codex/subagent assistance and model/source attribution included; no invented human teammates or sponsor integration.
+- [x] Demo narration/shot list prepared: [DEMO-SCRIPT.md](DEMO-SCRIPT.md).
 
-## Suggested DEV article outline
+## Required before publishing
 
-Use the **complete official Submission Template**, not a guessed replacement. Write in English for prize consideration and retain the required `devchallenge` and `hf26challenge` tags.
+- [x] Final UI changes passed 43 interface and 57 Python tests, formatting, type and production-build checks. Browser review is recorded in [PREMIUM-UI-REVIEW.md](PREMIUM-UI-REVIEW.md).
+- [x] Produced a 72-second captioned edited walkthrough of actual UI screens with synthetic data; [transcript](demo/TRANSCRIPT.md) discloses saved model output and editing. Static public demo page prepared.
+- [x] Public demo page URL inserted into `DEV-SUBMISSION.md`; no required article placeholder remains.
+- [ ] Verify the public deployment and video playback without account credentials before final publication.
+- [ ] Entrant reviews the article in their own voice, actual media and eligibility/contest obligations. No agent can certify the entrant's age or personal eligibility.
+- [ ] Check final public repository setup/link/history, source licenses and absence of private media, secrets, database/model assets or private ZIP archives.
+- [ ] Freeze/tag the reviewed submission revision and record its SHA. Describe post-deadline commits separately in README, as required by the challenge guidance.
+- [ ] Create one DEV post from the official template, preview its formatting/video/repository links and tags, then publish before the deadline. Verify the public URL and timestamp; repository publication alone is not entry submission.
 
-1. **What I built:** a particular listening problem and who the app serves. Explain the three-stop, revisit and correction experience.
-2. **Demo:** show the actual working application. Label every synthetic/sample clip and prerecorded output. Include an authentic outdoor segment only after a real trial.
-3. **Repository:** link the new public repository, reproducible setup and exact submission revision. Avoid claiming a local-only link is publicly accessible.
-4. **How I built it:** React/TypeScript interface, local Python service, bounded decoder, pinned CLAP checkpoint, serialized analysis and explicit human review. Explain one verified failure and its tested correction.
-5. **Open innovation:** demonstrate local cached inference, editable vocabulary and reproducibility. Do not assert every closed alternative is inferior or that a large model download costs nothing.
-6. **Evidence and limitations:** measured runtimes, real field observations, mistakes and corrections. Separate synthetic execution benchmarks from accuracy and outdoor-use findings.
-7. **Assistance and attribution:** truthfully disclose Codex/subagent help; credit original code, model and media sources. Agent instances are not invented human teammates.
-8. **Partner categories:** list only genuinely implemented eligible integrations. CLAP/local inference alone does not establish participation in any optional sponsor category.
+## Optional evidence that would strengthen the entry
 
-## Human review before publication
+- [ ] Perform genuine outdoor listening and include what happened, including errors or missing clips. [FIELD-TRIAL.md](FIELD-TRIAL.md) recommends two visits to compare the same stops; this is our protocol, not a contest requirement.
+- [ ] Replace the article's honest “no completed outdoor trial” statement only after real evidence exists. Permission to publish a recording is distinct from permission to record it.
+- [ ] Run independently labelled held-out evaluation **if making accuracy claims**. The current article makes none; an independent evaluation is not necessary for its existing narrow claims.
+- [ ] Optionally add an agent-session link after reviewing it for private data. A public transcript is not required.
 
-- [ ] Entrant personally confirms eligibility and considers the official contest obligations, promotional-use rights, and any human-team requirements.
-- [ ] User reviews the concrete article, demo, repository and intended public media before publication.
-- [ ] All actual human collaborators are credited; do not invent handles or consent.
-- [ ] No claim guarantees a prize or GSoC selection; this original challenge is separate from the upstream contribution program.
-- [ ] Publish one valid entry before the deadline, verify its public URL and record the receipt/time.
-- [ ] Freeze/tag the submission code; describe post-deadline commits separately in README.
+## Publication handoff
 
-## Current truthful boundary
-
-Implementation/tests are documented elsewhere. Genuine field observations, user-specific eligibility, publication consent and final entry submission cannot be manufactured by agents. Keep their checkboxes empty until independently completed and verified.
+The draft is intentionally viable with the synthetic working demo. Remaining essential user input: editorial approval of the final first-person article and personal eligibility confirmation. Public deployment/playback and the candidate revision still require final verification. Genuine field notes are a recommended enhancement rather than a fabricated prerequisite. No entry has been submitted by this checklist.
