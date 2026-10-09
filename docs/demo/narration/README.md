@@ -1,6 +1,8 @@
 # ElevenLabs demo narration — preparation
 
-Status: scripts prepared; no ElevenLabs audio generated or category claimed yet.
+Status: scripts prepared; free-tier preview generation attempted October 10. No downloaded ElevenLabs audio or category claimed yet. The text-to-speech editor reported "Failed to connect to the backend" after a reload; generation returned no audio, and the displayed balance remained 10,000 credits. Voice settings stayed loading. The built-in troubleshooting chat also disconnected.
+
+User preference: use free tiers only. Hacktoberfest partner credits may be used if available; the signed-in offers portal checked October 10 showed no ElevenLabs offer. Do not start a paid subscription or enable paid overages. Free output is for a private preview pending compatible publication rights.
 
 Eight segments correspond to the existing eight nine-second demo scenes. Use one stock narration voice consistently. Generate each text as 01.mp3–08.mp3 in a private folder; verify pronunciation and each segment's duration before assembly. No voice cloning or private user audio is needed.
 
