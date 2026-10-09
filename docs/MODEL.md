@@ -18,15 +18,14 @@ recognised recorder containers such as MP4/AAC, MP3 and WebM can use the
 imageio-ffmpeg binary. Codec checks use actual content, not file extensions.
 FFmpeg has a 20-second subprocess timeout, no shell, permitted file/pipe
 protocols only and a maximum 31-second output window to detect oversized audio.
-Playlists are rejected. Generated AAC/M4A decoding is tested; an actual user's
-phone recorder has not been validated yet.
+Playlists are rejected. Generated AAC/M4A and the user's two WhatsApp OPUS files decode locally. These two development examples do not establish support for every phone recorder.
 
-Inference uses **only the first 10 seconds**, mono at 48 kHz. Shorter audio is
+Inference uses **a user-selected interval of up to 10 seconds**, mono at 48 kHz; the first interval is the default. Shorter audio is
 zero-padded to exactly ten seconds so the processor cannot randomly choose a
-crop. Seven fixed prompt embeddings are cached once; normalised audio-text
+crop. Eleven versioned prompt embeddings are cached once; normalised audio-text
 cosine similarities produce two review suggestions. Scores are **not calibrated
 probabilities**, and a runner-up label does not prove a mixed sound source.
-Human review permits multiple labels and uncertainty. No speech transcription,
+Human review permits custom labels, multiple sounds, uncertainty and explicit rejection of all candidate matches. Digital silence abstains; other unsupported sounds still need human rejection. No speech transcription,
 speaker identity, species recognition or environmental health claims are made.
 
 Quiet and clipping flags describe digital recording quality, not measured
@@ -65,3 +64,7 @@ there are no recorded people in the procedural fixture. This demonstrates why
 the UI requires interpretation and human review rather than asserting every
 candidate is physically present. Outdoor usefulness and independently labelled
 field accuracy remain unmeasured.
+
+## Vocabulary v2 — October 9, 2026
+
+Adds footsteps, paper rustling, rain and insects. Each saved result contains vocabulary version, exact prompts and segment bounds. The earlier benchmark above remains historical v1 evidence. `benchmark-model-v2.json` records a new socket-blocked CPU run: 1.282 seconds cold, about 0.032 seconds warm and about 1018 MiB peak RSS. Hardware-specific timing is not accuracy. The evaluation script distinguishes synthetic/development examples from a declared held-out set; no independent outdoor accuracy result is claimed.

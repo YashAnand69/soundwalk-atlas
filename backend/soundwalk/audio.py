@@ -18,7 +18,7 @@ REVISION = "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a"
 SAMPLE_RATE = 48000
 MAX_DURATION = 30
 MAX_BYTES = 20 * 1024 * 1024
-VOCABULARY_VERSION = "1"
+VOCABULARY_VERSION = "2"
 PROMPTS = {
     "Birds": "The sound of birds chirping and singing outdoors.",
     "Road traffic": "The sound of road traffic and cars driving past.",
@@ -27,6 +27,10 @@ PROMPTS = {
     "Machinery": "The sound of machinery or construction work.",
     "People and voices": "The sound of people talking or human voices.",
     "Dogs and animals": "The sound of a dog barking or an animal calling.",
+    "Footsteps": "The sound of footsteps, someone walking on a surface.",
+    "Paper rustling": "The sound of paper rustling and book pages being turned.",
+    "Rain": "The sound of rain falling and raindrops pattering on surfaces.",
+    "Insects": "The sound of crickets chirping or insects buzzing outdoors.",
 }
 
 
@@ -89,8 +93,35 @@ def validate_audio(path: Path) -> dict:
     if float(np.mean(np.abs(data) >= 0.999)) > 0.01:
         quality.append("Possible clipping; this is a recording-quality flag, not a sound-level measurement.")
     if data.size > 10 * SAMPLE_RATE:
-        quality.append("Analysis uses only the first 10 seconds.")
+        quality.append("Analysis uses a selected 10-second segment; the first 10 seconds are the default.")
     return {"duration": data.size / SAMPLE_RATE, "quality": quality}
+
+
+def audio_preview(path: Path) -> dict:
+    """Bounded peak envelope at a fixed digital scale, never sound-pressure dB."""
+    data = _decode(Path(path))
+    bins = min(240, data.size)
+    edges = np.linspace(0, data.size, bins + 1, dtype=int)
+    peaks = [round(min(1.0, float(np.max(np.abs(data[left:right])))), 5)
+             for left, right in zip(edges[:-1], edges[1:])]
+    return {"peaks": peaks, "duration": data.size / SAMPLE_RATE,
+            "sampleRate": SAMPLE_RATE}
+
+
+def _segment(data: np.ndarray, start_seconds: float) -> tuple[np.ndarray, dict]:
+    # bool is not an interval, although Python considers it a number.
+    if isinstance(start_seconds, bool) or not isinstance(start_seconds, (int, float)):
+        raise ValueError("Segment start must be a finite non-negative number.")
+    if not np.isfinite(start_seconds) or start_seconds < 0:
+        raise ValueError("Segment start must be a finite non-negative number.")
+    if start_seconds >= data.size / SAMPLE_RATE:
+        raise ValueError("Segment start must be before the end of the recording.")
+    start = int(start_seconds * SAMPLE_RATE)
+    if start >= data.size:
+        raise ValueError("Segment start must be before the end of the recording.")
+    selected = data[start:start + 10 * SAMPLE_RATE]
+    return selected, {"startSeconds": start / SAMPLE_RATE,
+                      "endSeconds": (start + selected.size) / SAMPLE_RATE}
 
 
 class AudioAnalyser:
@@ -124,8 +155,25 @@ class AudioAnalyser:
             text = torch.nn.functional.normalize(text, dim=-1)
         self._processor, self._model, self._text = processor, model, text
 
-    def analyse(self, path: Path) -> dict:
-        data = _decode(Path(path))[:10 * SAMPLE_RATE]
+    def analyse(self, path: Path, start_seconds: float = 0) -> dict:
+        data, segment = _segment(_decode(Path(path)), start_seconds)
+        # Only effectively digital silence abstains automatically. This is a
+        # recording-quality check, not a calibrated confidence or ambient level.
+        rms = float(np.sqrt(np.mean(data.astype(np.float64) ** 2)))
+        quality = []
+        if rms < 0.001:
+            quality.append("Very quiet segment; candidate matches may be unreliable.")
+        if float(np.mean(np.abs(data) >= 0.999)) > 0.01:
+            quality.append("Possible clipping in the selected segment.")
+        result = {"suggestions": [], "status": "review", "model": MODEL_ID,
+                  "revision": REVISION, "segment": segment,
+                  "vocabularyVersion": VOCABULARY_VERSION,
+                  "prompts": dict(PROMPTS), "quality": quality,
+                  "matching": "candidate-similarity",
+                  "window": "Selected segment at 48 kHz mono, up to 10 seconds; shorter clips zero-padded. Vocabulary v2. Relative similarities, not confidence probabilities."}
+        if rms <= 1e-6:
+            result["quality"].append("Effectively silent digital segment; no sound suggestions generated.")
+            return result
         # CLAP's unfused processor takes a fixed 10-second window. Explicit zero
         # padding prevents random cropping/repeat padding for shorter recordings.
         window = np.zeros(10 * SAMPLE_RATE, dtype=np.float32)
@@ -140,4 +188,5 @@ class AudioAnalyser:
                 scores = (audio @ self._text.T)[0].cpu().numpy()
         labels = list(PROMPTS)
         order = np.argsort(-scores, kind="stable")[:2]
-        return {"suggestions": [{"label": labels[int(i)], "score": round(float(scores[i]), 5)} for i in order], "status": "review", "model": MODEL_ID, "revision": REVISION, "window": "First 10 seconds at 48 kHz mono; shorter clips zero-padded. Vocabulary v1. Relative similarities, not confidence probabilities."}
+        result["suggestions"] = [{"label": labels[int(i)], "score": round(float(scores[i]), 5)} for i in order]
+        return result

@@ -6,7 +6,7 @@ This is a practical protocol, not completed field evidence. The bundled WAVs are
 
 1. Choose three familiar, publicly accessible stops. Avoid traffic, private property and places where stopping or recording is inappropriate. The application is not a navigation or safety service.
 2. Create one route and keep its stop IDs for both visits. Print the listening card. Name stops without exact addresses or GPS coordinates if privacy matters.
-3. Use your phone's ordinary recorder. Test one actual recorder file in the app first. Prefer about ten seconds; the current limit is thirty seconds / 20 MB. Analysis uses the first ten seconds and zero-pads shorter recordings.
+3. Use your phone's ordinary recorder. Test one actual recorder file in the app first. Prefer about ten seconds; the current limit is thirty seconds / 20 MB. Analysis defaults to the first ten seconds, allows selecting a later interval, and zero-pads shorter recordings.
 4. Record your phone/recorder format and broad context for later comparison. Do not enter phone identifiers, private addresses or names of bystanders.
 5. Decide which original recordings, if any, may be made public. Permission to record is separate from permission to publish. An AI model's license does not license recordings.
 
@@ -27,7 +27,7 @@ Return to the same three stops for the second visit. Use the same recorder and c
 3. Before requesting AI suggestions, record expected broad labels in a separate trial worksheet. Use multiple labels where appropriate; retain ambiguous, unfamiliar, quiet or mixed recordings.
 4. Run local analysis, replay the clip and confirm/correct labels. Leave uncertainty enabled whenever needed. Relative similarity scores are not confidence probabilities.
 5. Compare the two visits. Report exactly what these samples captured, rather than making claims about a place's overall quietness, health or biodiversity.
-6. Export the JSON journal and open it to check corrections and model provenance. The current export contains records, not audio; archive import is not implemented.
+6. Export the JSON journal and open it to check corrections and model provenance. JSON contains records, not audio. Use Private backup + audio for a ZIP you can restore additively; keep original recordings and backups private.
 7. Restart the local application and confirm records/reviews persist. Test deletion with an expendable recording; independently saved exports/backups are not removed by app deletion.
 
 ## Worksheet: copy one row for each recording

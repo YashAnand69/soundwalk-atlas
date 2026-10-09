@@ -1,0 +1,131 @@
+{
+  "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "inputSha256": "d1173f406b854e92e1f1bbbc99775f79f22ebd228a570d223cca005e2bd591a5",
+  "source": "Synthetic generated fixture, not outdoor evidence",
+  "offlineEnvironment": true,
+  "socketConnectionsBlocked": true,
+  "peakRssMiB": 1018.1,
+  "runs": [
+    {
+      "seconds": 1.282,
+      "rssMiB": 1018.0,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "Rain",
+            "score": 0.30821
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "segment": {
+          "startSeconds": 0.0,
+          "endSeconds": 6.0
+        },
+        "vocabularyVersion": "2",
+        "prompts": {
+          "Birds": "The sound of birds chirping and singing outdoors.",
+          "Road traffic": "The sound of road traffic and cars driving past.",
+          "Wind and leaves": "The sound of wind blowing and rustling leaves.",
+          "Running water": "The sound of flowing water in a stream or fountain.",
+          "Machinery": "The sound of machinery or construction work.",
+          "People and voices": "The sound of people talking or human voices.",
+          "Dogs and animals": "The sound of a dog barking or an animal calling.",
+          "Footsteps": "The sound of footsteps, someone walking on a surface.",
+          "Paper rustling": "The sound of paper rustling and book pages being turned.",
+          "Rain": "The sound of rain falling and raindrops pattering on surfaces.",
+          "Insects": "The sound of crickets chirping or insects buzzing outdoors."
+        },
+        "quality": [],
+        "matching": "candidate-similarity",
+        "window": "Selected segment at 48 kHz mono, up to 10 seconds; shorter clips zero-padded. Vocabulary v2. Relative similarities, not confidence probabilities."
+      }
+    },
+    {
+      "seconds": 0.032,
+      "rssMiB": 1018.0,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "Rain",
+            "score": 0.30821
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "segment": {
+          "startSeconds": 0.0,
+          "endSeconds": 6.0
+        },
+        "vocabularyVersion": "2",
+        "prompts": {
+          "Birds": "The sound of birds chirping and singing outdoors.",
+          "Road traffic": "The sound of road traffic and cars driving past.",
+          "Wind and leaves": "The sound of wind blowing and rustling leaves.",
+          "Running water": "The sound of flowing water in a stream or fountain.",
+          "Machinery": "The sound of machinery or construction work.",
+          "People and voices": "The sound of people talking or human voices.",
+          "Dogs and animals": "The sound of a dog barking or an animal calling.",
+          "Footsteps": "The sound of footsteps, someone walking on a surface.",
+          "Paper rustling": "The sound of paper rustling and book pages being turned.",
+          "Rain": "The sound of rain falling and raindrops pattering on surfaces.",
+          "Insects": "The sound of crickets chirping or insects buzzing outdoors."
+        },
+        "quality": [],
+        "matching": "candidate-similarity",
+        "window": "Selected segment at 48 kHz mono, up to 10 seconds; shorter clips zero-padded. Vocabulary v2. Relative similarities, not confidence probabilities."
+      }
+    },
+    {
+      "seconds": 0.032,
+      "rssMiB": 1018.0,
+      "analysis": {
+        "suggestions": [
+          {
+            "label": "Running water",
+            "score": 0.3168
+          },
+          {
+            "label": "Rain",
+            "score": 0.30821
+          }
+        ],
+        "status": "review",
+        "model": "laion/clap-htsat-unfused",
+        "revision": "8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a",
+        "segment": {
+          "startSeconds": 0.0,
+          "endSeconds": 6.0
+        },
+        "vocabularyVersion": "2",
+        "prompts": {
+          "Birds": "The sound of birds chirping and singing outdoors.",
+          "Road traffic": "The sound of road traffic and cars driving past.",
+          "Wind and leaves": "The sound of wind blowing and rustling leaves.",
+          "Running water": "The sound of flowing water in a stream or fountain.",
+          "Machinery": "The sound of machinery or construction work.",
+          "People and voices": "The sound of people talking or human voices.",
+          "Dogs and animals": "The sound of a dog barking or an animal calling.",
+          "Footsteps": "The sound of footsteps, someone walking on a surface.",
+          "Paper rustling": "The sound of paper rustling and book pages being turned.",
+          "Rain": "The sound of rain falling and raindrops pattering on surfaces.",
+          "Insects": "The sound of crickets chirping or insects buzzing outdoors."
+        },
+        "quality": [],
+        "matching": "candidate-similarity",
+        "window": "Selected segment at 48 kHz mono, up to 10 seconds; shorter clips zero-padded. Vocabulary v2. Relative similarities, not confidence probabilities."
+      }
+    }
+  ]
+}

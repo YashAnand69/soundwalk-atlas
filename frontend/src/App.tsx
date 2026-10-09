@@ -6,7 +6,7 @@ import {
   ListeningTimer,
   StationRail,
 } from "./FieldInstrument";
-import type { Clip, Config, Route, State, Visit } from "./types";
+import type { Clip, Config, Route, State, Visit, Observation } from "./types";
 import { clipSummary, stopClips } from "./types";
 const empty: State = { routes: [], visits: [], clips: [] };
 export default function App() {
@@ -18,11 +18,29 @@ export default function App() {
     [routeId, setRouteId] = useState(""),
     [visitId, setVisitId] = useState(""),
     [compareId, setCompareId] = useState("");
+  const [focus, setFocus] = useState(false);
+  const [jobs, setJobs] = useState<
+    Record<string, { id: string; status: string }>
+  >({});
   const [routeName, setRouteName] = useState("My neighborhood loop"),
     [stops, setStops] = useState(
       "At the gate\nUnder the trees\nA quiet corner",
     ),
     [title, setTitle] = useState("");
+  const retainedFiles = useRef(new Map<string, File>());
+  const activeJobs = useRef(new Map<string, string>());
+  const [restoreResult, setRestoreResult] = useState("");
+  const [pendingBackup, setPendingBackup] = useState<File | null>(null);
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (retainedFiles.current.size) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, []);
   const mounted = useRef(true);
   const workspace = useRef<HTMLDivElement>(null);
   const preparation = useRef<HTMLDetailsElement>(null);
@@ -58,6 +76,65 @@ export default function App() {
   const route = state.routes.find((r) => r.id === routeId),
     visits = state.visits.filter((v) => v.routeId === routeId),
     visit = visits.find((v) => v.id === visitId);
+  const pendingReviews = state.clips.filter(
+    (c) => c.visitId === visitId && !c.review,
+  ).length;
+  const hasObservation = !!state.observations?.some(
+    (o) => o.visitId === visitId && o.note.trim(),
+  );
+  const visitClips = state.clips.filter((c) => c.visitId === visitId);
+  const nextAction = !route
+    ? "Prepare your first walk"
+    : !visit
+      ? "Start a visit"
+      : !hasObservation
+        ? "Save your first written observation"
+        : !visitClips.length
+          ? "Import an optional recording"
+          : pendingReviews
+            ? `Review ${pendingReviews} recording${pendingReviews === 1 ? "" : "s"}`
+            : visits.length < 2
+              ? "Return for another visit"
+              : "Compare your visits";
+  function followNextAction() {
+    if (!route) {
+      openWorkspace(true);
+      return;
+    }
+    if (
+      visit &&
+      hasObservation &&
+      visitClips.length &&
+      !pendingReviews &&
+      visits.length > 1
+    ) {
+      setTab("compare");
+      setCompareId(visits.find((v) => v.id !== visitId)?.id || "");
+      openWorkspace();
+      setTab("compare");
+      return;
+    }
+    openWorkspace();
+    window.requestAnimationFrame(() => {
+      const selector =
+        !visit || (hasObservation && visitClips.length && !pendingReviews)
+          ? ".visit-controls input"
+          : !hasObservation
+            ? ".observation-editor textarea"
+            : !visitClips.length
+              ? ".upload input[type=file]"
+              : ".review input";
+      const target = workspace.current?.querySelector<HTMLElement>(selector);
+      target?.scrollIntoView({
+        block: "center",
+        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")
+          .matches
+          ? "instant"
+          : "smooth",
+      });
+      target?.focus({ preventScroll: true });
+    });
+  }
   async function request<T>(
     path: string,
     options: RequestInit = {},
@@ -169,12 +246,20 @@ export default function App() {
       setTitle("");
     });
   }
-  async function analyse(id: string) {
-    await act(async () => {
+  async function analyse(id: string, startSeconds: number) {
+    if (activeJobs.current.has(id)) return;
+    activeJobs.current.set(id, "starting");
+    setJobs((j) => ({ ...j, [id]: { id: "starting", status: "queued" } }));
+    let ownJob = "starting";
+    setError("");
+    try {
       const job = await request<{ jobId: string }>(
         "/clips/" + id + "/analyse",
-        { method: "POST" },
+        { method: "POST", body: JSON.stringify({ startSeconds }) },
       );
+      ownJob = job.jobId;
+      activeJobs.current.set(id, ownJob);
+      setJobs((j) => ({ ...j, [id]: { id: job.jobId, status: "queued" } }));
       await refresh();
       for (let n = 0; n < 300; n++) {
         await new Promise((r) => setTimeout(r, 1000));
@@ -189,7 +274,12 @@ export default function App() {
           await refresh().catch(() => undefined);
           throw error;
         }
-        if (status.status === "done" || status.status === "failed") {
+        if (activeJobs.current.get(id) === ownJob)
+          setJobs((j) => ({
+            ...j,
+            [id]: { id: job.jobId, status: status.status },
+          }));
+        if (["done", "failed", "cancelled"].includes(status.status)) {
           await refresh();
           if (status.status === "failed")
             throw new Error(status.error || "Analysis failed");
@@ -200,10 +290,22 @@ export default function App() {
       throw new Error(
         "Analysis is taking longer than expected. Reload to check its status; your recording is saved.",
       );
-    });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Analysis failed");
+    } finally {
+      if (activeJobs.current.get(id) === ownJob) {
+        activeJobs.current.delete(id);
+        setJobs((j) => {
+          if (j[id]?.id !== ownJob) return j;
+          const next = { ...j };
+          delete next[id];
+          return next;
+        });
+      }
+    }
   }
   return (
-    <div className="app">
+    <div className={"app " + (focus ? "focus-mode" : "")}>
       <header>
         <a className="brand" href="#">
           <span className="brand-icon">◌</span> Soundwalk <em>Atlas</em>
@@ -213,10 +315,12 @@ export default function App() {
         </div>
       </header>
       <main>
-        <FieldHero
-          onBegin={() => openWorkspace()}
-          onPrepare={() => openWorkspace(true)}
-        />
+        {!focus && (
+          <FieldHero
+            onBegin={() => openWorkspace()}
+            onPrepare={() => openWorkspace(true)}
+          />
+        )}
         <JournalStats state={state} />
         {error && (
           <div className="alert" role="alert">
@@ -247,6 +351,19 @@ export default function App() {
             your review
           </div>
         )}
+        <div className="workflow-strip">
+          <span>01 Listen</span>
+          <span>02 Observe</span>
+          <span>03 Import</span>
+          <span>04 Review</span>
+          <span>05 Compare</span>
+          <button className="next-action" onClick={followNextAction}>
+            {nextAction} →
+          </button>
+          <button className="text-button" onClick={() => setFocus(!focus)}>
+            {focus ? "Show landscape" : "Focus on journal"}
+          </button>
+        </div>
         <nav className="tabs" aria-label="Workspace">
           <button
             className={tab === "walk" ? "active" : ""}
@@ -273,9 +390,54 @@ export default function App() {
             Refresh status ↻
           </button>
           <a href="/api/export" download>
-            Export journal ↗
+            Export JSON records ↗
           </a>
+          <a href="/api/backup" download>
+            Private backup + audio ↗
+          </a>
+          <label className="restore-control">
+            Restore backup
+            <input
+              type="file"
+              accept=".zip"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 200 * 1024 * 1024) {
+                  setRestoreResult("Backup exceeds 200 MB. Choose a smaller archive.");
+                  e.target.value = "";
+                  return;
+                }
+                setPendingBackup(file);
+                setRestoreResult("");
+                e.target.value = "";
+              }}
+            />
+          </label>
         </nav>
+        {pendingBackup && (
+          <div className="notice restore-confirm" role="region" aria-label="Confirm backup restore">
+            <p>Restore {pendingBackup.name} as new walks? This includes private audio and notes. Existing walks will not be overwritten.</p>
+            <button disabled={busy} onClick={() => void act(async () => {
+              const body = new FormData();
+              body.append("file", pendingBackup);
+              const result = await request<{restoredRoutes: number; restoredVisits: number; restoredClips: number; restoredObservations: number}>("/restore", {method: "POST", body});
+              await refresh();
+              setRestoreResult(`Restored ${result.restoredRoutes} walks, ${result.restoredVisits} visits, ${result.restoredClips} recordings and ${result.restoredObservations} written observations.`);
+              setPendingBackup(null);
+            })}>Restore as new walks</button>
+            <button disabled={busy} onClick={() => setPendingBackup(null)}>Cancel restore</button>
+          </div>
+        )}
+        {restoreResult && (
+          <p className="notice" role="status">
+            {restoreResult}
+          </p>
+        )}
+        <p className="backup-notice tiny">
+          Private backup includes your original audio and notes. Keep it
+          private. JSON export contains records only.
+        </p>
         <div className="workspace" ref={workspace} tabIndex={-1}>
           <aside>
             <p className="eyebrow">YOUR PLACES</p>
@@ -377,6 +539,45 @@ export default function App() {
                     Print card ↗
                   </button>
                 </div>
+                <div className="rename-controls">
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      const name = window.prompt("Rename walk", route.name);
+                      if (name?.trim())
+                        void act(async () => {
+                          await request("/routes/" + route.id, {
+                            method: "PATCH",
+                            body: JSON.stringify({ name: name.trim() }),
+                          });
+                          await refresh();
+                        });
+                    }}
+                  >
+                    Rename walk
+                  </button>
+                  {visit && (
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        const title = window.prompt(
+                          "Rename visit",
+                          visit.title,
+                        );
+                        if (title?.trim())
+                          void act(async () => {
+                            await request("/visits/" + visit.id, {
+                              method: "PATCH",
+                              body: JSON.stringify({ title: title.trim() }),
+                            });
+                            await refresh();
+                          });
+                      }}
+                    >
+                      Rename visit
+                    </button>
+                  )}
+                </div>
                 {route.name === "Synthetic sample · not a field walk" && (
                   <div className="sample">
                     Synthetic example — simulated audio, not observations from
@@ -385,7 +586,9 @@ export default function App() {
                 )}
                 {tab === "walk" ? (
                   <>
-                    <div className="walk-card">
+                    <div
+                      className={"walk-card " + (focus ? "compact-card" : "")}
+                    >
                       <div className="card-top">
                         <b>Before you press record</b>
                         <span>LEAVE THE SCREEN BEHIND</span>
@@ -463,7 +666,31 @@ export default function App() {
                                 <p>What did you notice before the model?</p>
                               </div>
                             </div>
+                            <ObservationEditor
+                              key={"observation:" + visit.id + ":" + stop.id}
+                              draftKey={visit.id + ":" + stop.id}
+                              observation={state.observations?.find(
+                                (o) =>
+                                  o.visitId === visit.id &&
+                                  o.stopId === stop.id,
+                              )}
+                              onSave={(values) =>
+                                act(async () => {
+                                  await request("/observations", {
+                                    method: "POST",
+                                    body: JSON.stringify({
+                                      ...values,
+                                      visitId: visit.id,
+                                      stopId: stop.id,
+                                    }),
+                                  });
+                                  await refresh();
+                                })
+                              }
+                            />
                             <Upload
+                              retainedFiles={retainedFiles.current}
+                              draftKey={visit.id + ":" + stop.id}
                               key={visit.id + ":" + stop.id}
                               disabled={busy}
                               maxBytes={config?.limits.maxBytes || 20971520}
@@ -501,18 +728,39 @@ export default function App() {
                                 key={c.id}
                                 clip={c}
                                 busy={busy}
+                                job={jobs[c.id]}
+                                onCancel={() => {
+                                  const job = jobs[c.id];
+                                  if (job)
+                                    void request(
+                                      "/jobs/" + job.id + "/cancel",
+                                      { method: "POST" },
+                                    )
+                                      .then(() => refresh())
+                                      .catch((e) => setError(e.message));
+                                }}
                                 canAnalyse={!!config?.model.ready}
-                                onAnalyse={() => analyse(c.id)}
+                                onAnalyse={(start) => analyse(c.id, start)}
                                 onReview={(review) =>
                                   act(async () => {
-                                    await request<Clip>(
+                                    const saved = await request<Clip>(
                                       "/clips/" + c.id + "/review",
                                       {
                                         method: "PATCH",
                                         body: JSON.stringify(review),
                                       },
                                     );
-                                    await refresh();
+                                    setState((previous) => ({
+                                      ...previous,
+                                      clips: previous.clips.map((clip) =>
+                                        clip.id === saved.id ? saved : clip,
+                                      ),
+                                    }));
+                                    await refresh().catch(() =>
+                                      setError(
+                                        "Review saved, but the journal could not refresh. Use Refresh status to reconnect.",
+                                      ),
+                                    );
                                   })
                                 }
                                 onDelete={() => {
@@ -525,6 +773,13 @@ export default function App() {
                                       await request("/clips/" + c.id, {
                                         method: "DELETE",
                                       });
+                                      try {
+                                        localStorage.removeItem(
+                                          "soundwalk:draft:review:" + c.id,
+                                        );
+                                      } catch {
+                                        /* No browser draft available. */
+                                      }
                                       await refresh();
                                     });
                                 }}
@@ -545,6 +800,29 @@ export default function App() {
                                 await request("/visits/" + visit.id, {
                                   method: "DELETE",
                                 });
+                                for (const key of retainedFiles.current.keys()) {
+                                  if (key.startsWith(visit.id + ":"))
+                                    retainedFiles.current.delete(key);
+                                }
+                                try {
+                                  const clipIds = state.clips
+                                    .filter((c) => c.visitId === visit.id)
+                                    .map((c) => c.id);
+                                  for (const key of Object.keys(localStorage)) {
+                                    if (
+                                      key.startsWith("soundwalk:draft:") &&
+                                      (key.includes(":" + visit.id + ":") ||
+                                        clipIds.some(
+                                          (id) =>
+                                            key ===
+                                            "soundwalk:draft:review:" + id,
+                                        ))
+                                    )
+                                      localStorage.removeItem(key);
+                                  }
+                                } catch {
+                                  /* No browser drafts available. */
+                                }
                                 await refresh();
                                 setVisitId("");
                               });
@@ -606,6 +884,31 @@ export default function App() {
                                 </span>
                                 <b>{clipSummary(stopClips(state, id, s.id))}</b>
                                 <small>
+                                  {
+                                    stopClips(state, id, s.id).filter(
+                                      (c) => c.review,
+                                    ).length
+                                  }{" "}
+                                  of {stopClips(state, id, s.id).length}{" "}
+                                  reviewed
+                                </small>
+                                {state.observations
+                                  ?.filter(
+                                    (o) =>
+                                      o.visitId === id && o.stopId === s.id,
+                                  )
+                                  .map((o) => (
+                                    <div
+                                      key={o.id}
+                                      className="comparison-observation"
+                                    >
+                                      <p>{o.note}</p>
+                                      <small>
+                                        {o.observedAt} · {o.context}
+                                      </small>
+                                    </div>
+                                  ))}
+                                <small>
                                   {stopClips(state, id, s.id).length}{" "}
                                   recording(s)
                                 </small>
@@ -621,6 +924,21 @@ export default function App() {
                                       </p>
                                       <p>
                                         {clip.note || "No observation recorded"}
+                                      </p>
+                                      <p className="review-summary">
+                                        {clip.review
+                                          ? clip.review.labels.join(", ") ||
+                                            "No confirmed label"
+                                          : "Review pending"}
+                                        {clip.review?.uncertain
+                                          ? " · uncertain"
+                                          : ""}
+                                        {clip.review?.mixed
+                                          ? " · multiple sounds"
+                                          : ""}
+                                        {clip.review?.mismatch
+                                          ? " · model did not fit"
+                                          : ""}
                                       </p>
                                       <audio
                                         aria-label={
@@ -667,18 +985,152 @@ export default function App() {
     </div>
   );
 }
+function useDraft<T>(key: string, initial: T) {
+  const storageKey = "soundwalk:draft:" + key;
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) || "null");
+      if (parsed === null || typeof parsed !== typeof initial) return initial;
+      if (
+        typeof initial === "object" &&
+        initial !== null &&
+        !Object.entries(initial).every(
+          ([key, value]) => typeof parsed[key] === typeof value,
+        )
+      )
+        return initial;
+      return parsed as T;
+    } catch {
+      return initial;
+    }
+  });
+  const dirty = useRef(JSON.stringify(value) !== JSON.stringify(initial));
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (dirty.current) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, []);
+  const update = (next: T) => {
+    dirty.current = true;
+    setValue(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      /* Browser storage may be unavailable. */
+    }
+  };
+  const clear = (next: T) => {
+    dirty.current = false;
+    setValue(next);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      /* Saved server data remains authoritative. */
+    }
+  };
+  return [value, update, clear] as const;
+}
+function ObservationEditor({
+  draftKey,
+  observation,
+  onSave,
+}: {
+  draftKey: string;
+  observation?: Observation;
+  onSave: (v: {
+    note: string;
+    observedAt: string;
+    context: string;
+  }) => Promise<boolean>;
+}) {
+  const [value, setValue, clear] = useDraft("observation:" + draftKey, {
+    note: observation?.note || "",
+    observedAt: observation?.observedAt || "",
+    context: observation?.context || "",
+  });
+  const [saving, setSaving] = useState(false),
+    [saved, setSaved] = useState(false);
+  return (
+    <form
+      className="observation-editor"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        if (await onSave(value)) {
+          clear(value);
+          setSaved(true);
+        }
+        setSaving(false);
+      }}
+    >
+      <p className="eyebrow">YOUR FIRST IMPRESSION · AUDIO OPTIONAL</p>
+      <label>
+        Written listening note
+        <textarea
+          value={value.note}
+          maxLength={2000}
+          rows={2}
+          onChange={(e) => {
+            setValue({ ...value, note: e.target.value });
+            setSaved(false);
+          }}
+          placeholder="Near sounds, far sounds, something unexpected…"
+        />
+      </label>
+      <div className="observation-context">
+        <label>
+          Observed at
+          <input
+            type="datetime-local"
+            value={value.observedAt}
+            onChange={(e) => setValue({ ...value, observedAt: e.target.value })}
+          />
+        </label>
+        <label>
+          Conditions / context
+          <input
+            value={value.context}
+            maxLength={500}
+            placeholder="After rain, quiet morning…"
+            onChange={(e) => setValue({ ...value, context: e.target.value })}
+          />
+        </label>
+      </div>
+      <button className="secondary" disabled={saving || !value.note.trim()}>
+        {saving ? "Saving note…" : "Save written observation"}
+      </button>
+      {saved && <span role="status">Written observation saved</span>}
+      <small>
+        Drafts stay in this browser on this computer. Saving does not require a
+        recording.
+      </small>
+    </form>
+  );
+}
 function Upload({
   disabled,
   maxBytes,
   onUpload,
+  draftKey,
+  retainedFiles,
 }: {
+  retainedFiles: Map<string, File>;
   disabled: boolean;
   maxBytes: number;
+  draftKey: string;
   onUpload: (file: File, note: string) => Promise<boolean>;
 }) {
-  const [file, setFile] = useState<File | null>(null),
-    [note, setNote] = useState(""),
-    [error, setError] = useState("");
+  const [file, setFile] = useState<File | null>(
+      () => retainedFiles.get(draftKey) || null,
+    ),
+    [note, setNote, clearNote] = useDraft("upload:" + draftKey, ""),
+    [error, setError] = useState(""),
+    [saving, setSaving] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   return (
     <form
@@ -693,10 +1145,20 @@ function Upload({
           return;
         }
         setError("");
-        if (await onUpload(file, note)) {
-          setFile(null);
-          setNote("");
-          if (input.current) input.current.value = "";
+        setSaving(true);
+        try {
+          if (await onUpload(file, note)) {
+            setFile(null);
+            retainedFiles.delete(draftKey);
+            clearNote("");
+            if (input.current) input.current.value = "";
+          } else {
+            setError(
+              "Recording was not saved. Your file and note are retained; check the service message and try again.",
+            );
+          }
+        } finally {
+          setSaving(false);
         }
       }}
     >
@@ -716,20 +1178,132 @@ function Upload({
           <input
             ref={input}
             type="file"
-            accept="audio/*,.wav"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            accept="audio/*,.wav,.opus,.m4a"
+            onChange={(e) => {
+              const selected = e.target.files?.[0] || null;
+              setFile(selected);
+              if (selected) retainedFiles.set(draftKey, selected);
+              else retainedFiles.delete(draftKey);
+            }}
           />
         </label>
-        <button className="primary" disabled={disabled || !file}>
-          Save recording
+        <button className="primary" disabled={disabled || saving || !file}>
+          {saving ? "Saving recording…" : "Save recording"}
         </button>
       </div>
+      {file && (
+        <p className="file-metadata">
+          {(file.size / 1024).toFixed(1)} KB ·{" "}
+          {file.type || "Format checked by decoder"} · duration verified on
+          import
+        </p>
+      )}
+      {saving && (
+        <p className="job-status" role="status">
+          Transferring and validating audio locally…
+        </p>
+      )}
       <small>
-        Prefer a 10-second WAV. Maximum 30 seconds / 20 MB. Other audio formats
-        depend on the installed decoder.
+        Maximum 30 seconds / 20 MB. WAV, M4A and WhatsApp OPUS are supported by
+        the local decoder. Save original files without conversion. Draft notes
+        stay in this browser; selected files must be reselected after closing
+        it.
       </small>
       {error && <p role="alert">{error}</p>}
     </form>
+  );
+}
+function Waveform({
+  clip,
+  start,
+  onStart,
+}: {
+  clip: Clip;
+  start: number;
+  onStart: (n: number) => void;
+}) {
+  const [preview, setPreview] = useState<{
+      peaks: number[];
+      duration: number;
+    } | null>(null),
+    [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/clips/" + clip.id + "/waveform")
+      .then((r) => {
+        if (!r.ok) throw Error();
+        return r.json();
+      })
+      .then((p) => {
+        if (active) setPreview(p);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [clip.id]);
+  const max = Math.max(0, clip.duration - 10),
+    end = Math.min(clip.duration, start + 10);
+  return (
+    <div className="waveform-panel">
+      <div className="waveform-heading">
+        <span>Actual recording waveform</span>
+        <span>
+          {start.toFixed(1)}–{end.toFixed(1)} seconds selected
+        </span>
+      </div>
+      {preview ? (
+        <svg
+          role="img"
+          aria-label="Waveform of your recording, highlighted selected interval"
+          viewBox="0 0 480 80"
+          preserveAspectRatio="none"
+        >
+          <rect
+            x={(start / clip.duration) * 480}
+            width={((end - start) / clip.duration) * 480}
+            y="0"
+            height="80"
+            className="waveform-selection"
+          />
+          {preview.peaks.map((p, i) => (
+            <line
+              key={i}
+              x1={(i / preview.peaks.length) * 480}
+              x2={(i / preview.peaks.length) * 480}
+              y1={40 - p * 36}
+              y2={40 + p * 36}
+            />
+          ))}
+        </svg>
+      ) : (
+        <p className="tiny">
+          {failed
+            ? "Waveform unavailable. Playback and interval selection remain available."
+            : "Decoding waveform locally…"}
+        </p>
+      )}
+      <label className="segment-controls">
+        Analysis start (seconds)
+        <input
+          type="range"
+          min="0"
+          max={max}
+          step="0.1"
+          value={start}
+          disabled={!max}
+          onChange={(e) => onStart(Number(e.target.value))}
+        />
+        <output>{start.toFixed(1)}s</output>
+      </label>
+      <small>
+        Only the selected interval, up to 10 seconds, is compared with candidate
+        descriptions. The waveform is digital amplitude, not a sound-level
+        measurement.
+      </small>
+    </div>
   );
 }
 function ClipCard({
@@ -739,17 +1313,56 @@ function ClipCard({
   onAnalyse,
   onReview,
   onDelete,
+  job,
+  onCancel,
 }: {
   clip: Clip;
   busy: boolean;
   canAnalyse: boolean;
-  onAnalyse: () => void;
-  onReview: (r: { labels: string[]; uncertain: boolean; note: string }) => void;
+  onAnalyse: (start: number) => void;
+  onReview: (r: {
+    labels: string[];
+    uncertain: boolean;
+    note: string;
+    mixed?: boolean;
+    mismatch?: boolean;
+  }) => Promise<boolean>;
   onDelete: () => void;
+  job?: { id: string; status: string };
+  onCancel: () => void;
 }) {
-  const [labels, setLabels] = useState(clip.review?.labels.join(", ") || ""),
-    [uncertain, setUncertain] = useState(clip.review?.uncertain || false),
-    [note, setNote] = useState(clip.review?.note || "");
+  const [draft, setDraft, clearDraft] = useDraft("review:" + clip.id, {
+    labels: clip.review?.labels.join(", ") || "",
+    uncertain: clip.review?.uncertain || false,
+    note: clip.review?.note || "",
+    mixed: clip.review?.mixed || false,
+    mismatch: clip.review?.mismatch || false,
+  });
+  const [start, setStart] = useState(clip.analysis?.segment?.startSeconds || 0),
+    [saving, setSaving] = useState(false),
+    [saved, setSaved] = useState(false);
+  const choices = [
+    "Birds",
+    "Road traffic",
+    "Wind and leaves",
+    "Running water",
+    "Machinery",
+    "Dogs and animals",
+    "People and voices",
+    "Footsteps",
+    "Paper rustling",
+    "Rain",
+    "Insects",
+    ...(clip.analysis?.suggestions.map((s) => s.label) || []),
+  ].filter((v, i, a) => a.indexOf(v) === i);
+  const labels = draft.labels
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const update = (v: Partial<typeof draft>) => {
+    setDraft({ ...draft, ...v });
+    setSaved(false);
+  };
   return (
     <article className="clip">
       <div className="clip-head">
@@ -760,32 +1373,71 @@ function ClipCard({
         </span>
       </div>
       <audio controls preload="none" src={"/api/clips/" + clip.id + "/audio"} />
-      {clip.note && <p className="observation">“{clip.note}”</p>}
+      <Waveform clip={clip} start={start} onStart={setStart} />
+      {clip.note && (
+        <div className="original-observation">
+          <p className="eyebrow">YOUR ORIGINAL OBSERVATION</p>
+          <p className="observation">“{clip.note}”</p>
+        </div>
+      )}
       {clip.quality.length > 0 && (
         <p className="quality">Recording notes: {clip.quality.join(", ")}</p>
       )}
       {clip.error && <p role="alert">{clip.error}</p>}
       {clip.analysis ? (
         <div className="suggestions">
-          <p className="eyebrow">MODEL SUGGESTIONS · RELATIVE SCORES</p>
-          {clip.analysis.suggestions.map((s) => (
-            <div key={s.label}>
-              <span>{s.label}</span>
-              <span>{s.score.toFixed(3)}</span>
-            </div>
-          ))}
+          <p className="eyebrow">
+            PROVISIONAL CANDIDATE MATCHES · CHECK WHAT FITS
+          </p>
+          <p className="analysis-interval">
+            Last analysed interval:{" "}
+            {clip.analysis.segment
+              ? `${clip.analysis.segment.startSeconds.toFixed(1)}–${clip.analysis.segment.endSeconds.toFixed(1)} seconds`
+              : clip.analysis.window}
+          </p>
+          {Math.abs(start - (clip.analysis.segment?.startSeconds || 0)) >
+            0.05 && (
+            <p className="segment-pending" role="status">
+              Selection changed. These saved matches describe the previous
+              interval; analyse again to update them.
+            </p>
+          )}
+          {!!clip.analysis.quality?.length && (
+            <p className="quality">
+              Selected audio: {clip.analysis.quality.join(" ")}
+            </p>
+          )}
+          <div className="candidate-labels">
+            {clip.analysis.suggestions.map((s) => (
+              <span key={s.label}>{s.label}</span>
+            ))}
+          </div>
+          {!clip.analysis.suggestions.length && (
+            <p>
+              No usable candidate match. Your observation is the source of
+              truth.
+            </p>
+          )}
           <small>
-            These scores compare candidate labels; they are not confidence
-            percentages. Mixed and unfamiliar sounds may be misleading.{" "}
+            These compare candidate descriptions; they are not confidence
+            percentages. Unfamiliar and mixed sounds can be misleading.{" "}
             {clip.analysis.window}
           </small>
           <details>
-            <summary>Model provenance</summary>
+            <summary>Technical details and model provenance</summary>
             <p>
               {clip.analysis.model}
               <br />
               Revision: {clip.analysis.revision}
+              <br />
+              Vocabulary:{" "}
+              {clip.analysis.vocabularyVersion || "Original candidate set"}
             </p>
+            {clip.analysis.suggestions.map((s) => (
+              <p key={s.label}>
+                {s.label}: cosine similarity {s.score.toFixed(3)}
+              </p>
+            ))}
           </details>
         </div>
       ) : (
@@ -793,70 +1445,134 @@ function ClipCard({
           No AI suggestion yet. Your observation is enough to review manually.
         </p>
       )}
-      <button
-        className={`secondary ${clip.status === "analysing" ? "analysing" : ""}`}
-        disabled={busy || !canAnalyse || clip.status === "analysing"}
-        onClick={onAnalyse}
-      >
-        {clip.status === "analysing"
-          ? "Analysing locally…"
-          : clip.analysis
-            ? "Analyse again locally"
-            : "Analyse locally"}
-      </button>
+      <div className="match-actions">
+        <button
+          className={"secondary " + (job ? "analysing" : "")}
+          disabled={!canAnalyse || !!job || clip.status === "analysing"}
+          onClick={() => onAnalyse(start)}
+        >
+          {job || clip.status === "analysing"
+            ? "Analysing locally…"
+            : clip.analysis
+              ? "Analyse again locally"
+              : "Analyse locally"}
+        </button>
+        {job && (
+          <>
+            <span role="status" className="job-status">
+              {job.status === "queued"
+                ? "Waiting for local model"
+                : "Comparing selected audio locally"}
+            </span>
+            <button
+              className="text-button"
+              disabled={job.id === "starting"}
+              onClick={onCancel}
+            >
+              Cancel analysis
+            </button>
+          </>
+        )}
+      </div>
       <form
         className="review"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          onReview({
-            labels: labels
-              .split(",")
-              .map((x) => x.trim())
-              .filter(Boolean),
-            uncertain,
-            note,
-          });
+          setSaving(true);
+          const review = {
+            labels,
+            uncertain: draft.uncertain,
+            note: draft.note,
+            ...(draft.mixed ? { mixed: true } : {}),
+            ...(draft.mismatch ? { mismatch: true } : {}),
+          };
+          if (await onReview(review)) {
+            clearDraft(draft);
+            setSaved(true);
+          }
+          setSaving(false);
         }}
       >
+        <p className="eyebrow">YOUR JUDGMENT · NEVER AUTOMATICALLY FILLED</p>
+        <div className="label-chips" aria-label="Choose human sound labels">
+          {choices.map((label) => (
+            <button
+              className={
+                "label-chip " + (labels.includes(label) ? "selected" : "")
+              }
+              key={label}
+              type="button"
+              aria-pressed={labels.includes(label)}
+              onClick={() =>
+                update({
+                  labels: (labels.includes(label)
+                    ? labels.filter((l) => l !== label)
+                    : [...labels, label]
+                  ).join(", "),
+                })
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <label>
           Your labels, separated by commas
           <input
-            value={labels}
+            value={draft.labels}
             maxLength={500}
-            onChange={(e) => setLabels(e.target.value)}
-            placeholder="wind, traffic"
+            onChange={(e) => update({ labels: e.target.value })}
+            placeholder="Add your own: book pages, footsteps…"
           />
         </label>
         <label className="checkbox">
           <input
             type="checkbox"
-            checked={uncertain}
-            onChange={(e) => setUncertain(e.target.checked)}
-          />{" "}
-          Uncertain or mixed — don’t treat this as a firm label
+            checked={draft.mismatch}
+            onChange={(e) => update({ mismatch: e.target.checked })}
+          />
+          None of these model matches fits
+        </label>
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={draft.mixed}
+            onChange={(e) => update({ mixed: e.target.checked })}
+          />
+          Multiple sounds heard — I can identify more than one
+        </label>
+        <label className="checkbox">
+          <input
+            aria-label="Uncertain — I cannot give a firm label"
+            type="checkbox"
+            checked={draft.uncertain}
+            onChange={(e) => update({ uncertain: e.target.checked })}
+          />
+          Uncertain — I cannot give a firm label
         </label>
         <label>
           Review note
           <input
-            value={note}
+            value={draft.note}
             maxLength={2000}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => update({ note: e.target.value })}
             placeholder="What did the model miss?"
           />
         </label>
         <div>
-          <button className="primary" disabled={busy}>
-            Save my review
+          <button className="primary" disabled={busy || saving}>
+            {saving ? "Saving review…" : "Save my review"}
           </button>
           <button
             className="text-button danger"
             type="button"
-            disabled={busy}
+            disabled={busy || saving}
             onClick={onDelete}
           >
             Delete recording
           </button>
         </div>
+        {saved && <p role="status">Your review is saved</p>}
       </form>
     </article>
   );

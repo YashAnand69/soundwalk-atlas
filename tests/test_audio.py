@@ -3,7 +3,7 @@ import subprocess
 import numpy as np
 import pytest
 import soundfile as sf
-from soundwalk.audio import validate_audio, AudioAnalyser, _decode, SAMPLE_RATE
+from soundwalk.audio import validate_audio, AudioAnalyser, _decode, SAMPLE_RATE, PROMPTS, audio_preview
 
 
 def write(tmp_path, data, rate=48000):
@@ -44,7 +44,7 @@ def test_missing_model_does_not_download(tmp_path, monkeypatch):
     model = AudioAnalyser()
     assert not model.status()["ready"]
     with pytest.raises(RuntimeError, match="not prepared"):
-        model.analyse(write(tmp_path, np.zeros(48000)))
+        model.analyse(write(tmp_path, np.full(48000, .1)))
 
 
 def test_m4a_decoder_and_duration_limit(tmp_path):
@@ -119,10 +119,59 @@ def test_deterministic_first_window_and_zero_padding(tmp_path):
     model = AudioAnalyser()
     model._load = lambda: None
     model._processor, model._model = Processor(), Model()
-    model._text = torch.tensor([[1., 0.], [0., 1.]] + [[-1., 0.]] * 5)
+    model._text = torch.tensor([[1., 0.], [0., 1.]] + [[-1., 0.]] * (len(PROMPTS) - 2))
     model.analyse(write(tmp_path, np.concatenate([np.full(48000 * 10, .1), np.full(48000, .5)])))
     assert captured[0].shape == (480000,)
     assert np.allclose(captured[0], .1)
     model.analyse(write(tmp_path, np.full(48000, .2)))
     assert np.allclose(captured[1][:48000], .2)
     assert np.count_nonzero(captured[1][48000:]) == 0
+
+
+def test_waveform_is_bounded_and_uses_fixed_digital_scale(tmp_path):
+    quiet = audio_preview(write(tmp_path, np.full(48000, .01)))
+    assert quiet['duration'] == 1
+    assert quiet['sampleRate'] == SAMPLE_RATE
+    assert len(quiet['peaks']) == 240
+    assert quiet['peaks'] == [.01] * 240
+    tiny = audio_preview(write(tmp_path, np.array([.2, -.4, .1])))
+    assert tiny['peaks'] == [.2, .4, .1]
+
+
+@pytest.mark.parametrize('start', [-1, float('nan'), float('inf'), True, '0', 1, 1e308])
+def test_invalid_segment_is_rejected_before_model_loading(tmp_path, start):
+    with pytest.raises(ValueError, match='Segment start'):
+        AudioAnalyser().analyse(write(tmp_path, np.full(48000, .1)), start)
+
+
+def test_silence_abstains_without_preparing_model(tmp_path, monkeypatch):
+    monkeypatch.setenv('SOUNDWALK_MODEL_DIR', str(tmp_path / 'missing'))
+    result = AudioAnalyser().analyse(write(tmp_path, np.zeros(48000)))
+    assert result['suggestions'] == []
+    assert 'silent' in result['quality'][-1]
+    assert result['segment'] == {'startSeconds': 0, 'endSeconds': 1}
+    assert result['matching'] == 'candidate-similarity'
+    assert result['vocabularyVersion'] == '2'
+    assert result['prompts'] == PROMPTS
+
+
+def test_selected_window_offset_and_padding(tmp_path):
+    import torch
+    captured = []
+    class Processor:
+        def __call__(self, *, audio, **kwargs):
+            captured.append(audio.copy())
+            return {}
+    class Model:
+        def get_audio_features(self):
+            return torch.tensor([[1., 0.]])
+    analyser = AudioAnalyser()
+    analyser._load = lambda: None
+    analyser._processor, analyser._model = Processor(), Model()
+    analyser._text = torch.tensor([[1., 0.]] * len(PROMPTS))
+    path = write(tmp_path, np.concatenate([np.full(48000, .1), np.full(48000, .5)]))
+    result = analyser.analyse(path, start_seconds=1)
+    assert result['segment'] == {'startSeconds': 1, 'endSeconds': 2}
+    assert np.allclose(captured[0][:48000], .5)
+    assert np.count_nonzero(captured[0][48000:]) == 0
+    assert result['suggestions'][0]['label'] == 'Birds'  # stable tied ordering

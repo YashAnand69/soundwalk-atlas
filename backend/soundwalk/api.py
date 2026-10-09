@@ -64,6 +64,8 @@ class VisitInput(BaseModel):
 class ReviewInput(BaseModel):
     labels: list[str] = Field(max_length=12)
     uncertain: bool
+    mixed: bool = False
+    mismatch: bool = False
     note: str = Field(max_length=2000)
 
     @field_validator("labels")
@@ -72,6 +74,23 @@ class ReviewInput(BaseModel):
         if any(not v.strip() or len(v) > 120 for v in labels):
             raise ValueError("Labels must contain 1–120 characters")
         return list(dict.fromkeys(v.strip() for v in labels))
+
+
+class ObservationInput(BaseModel):
+    visitId: str
+    stopId: str
+    note: str = Field(max_length=2000)
+    observedAt: str | None = Field(default=None, max_length=80)
+    context: str = Field(default="", max_length=500)
+
+class AnalyseInput(BaseModel):
+    startSeconds: float = Field(default=0, ge=0, le=30, allow_inf_nan=False)
+
+class RouteRename(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+class VisitRename(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
 
 
 def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None):
@@ -83,6 +102,8 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
     token = secrets.token_urlsafe(32)
     hosts = set(allowed_hosts or {"127.0.0.1:8765", "localhost:8765"})
     jobs = {}
+    active_jobs = set()
+    waveform_cache = {}
     pending = queue.Queue(maxsize=8)
     state_lock = threading.RLock()
     stop = threading.Event()
@@ -96,18 +117,24 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
     def worker():
         while not stop.is_set():
             try:
-                job_id, clip_id = pending.get(timeout=0.2)
+                job_id, clip_id, start_seconds = pending.get(timeout=0.2)
             except queue.Empty:
                 continue
             with state_lock:
+                if jobs[job_id]["status"] == "cancelled":
+                    active_jobs.discard(job_id)
+                    pending.task_done()
+                    continue
                 jobs[job_id]["status"] = "running"
                 clip = store.get("clips", clip_id)
             try:
                 if clip is None:
                     raise ValueError("Recording was deleted")
-                result = analyser.analyse(store.audio_dir / clip_id)
+                result = analyser.analyse(store.audio_dir / clip_id) if start_seconds == 0 else analyser.analyse(store.audio_dir / clip_id, start_seconds=start_seconds)
                 with state_lock:
                     current = store.get("clips", clip_id)
+                    if jobs[job_id]["status"] == "cancelled":
+                        continue
                     if current:
                         current.update(analysis=result, status="ready")
                         current.pop("error", None)
@@ -119,11 +146,15 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
                 message = message[:500]
                 with state_lock:
                     current = store.get("clips", clip_id)
+                    if jobs[job_id]["status"] == "cancelled":
+                        continue
                     if current:
                         current.update(status="failed", error=message)
                         store.put("clips", current)
                     jobs[job_id].update(status="failed", error=message)
             finally:
+                with state_lock:
+                    active_jobs.discard(job_id)
                 pending.task_done()
 
     @asynccontextmanager
@@ -162,14 +193,15 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             if not secrets.compare_digest(request.headers.get("x-soundwalk-token", "").encode("utf-8"), token.encode("ascii")):
                 return JSONResponse({"detail": "Local session token required"}, status_code=403)
-        if request.url.path == "/api/clips" and request.method == "POST":
+        if request.url.path in {"/api/clips", "/api/restore"} and request.method == "POST":
             try:
                 length = int(request.headers.get("content-length", "0"))
             except ValueError:
                 return JSONResponse({"detail": "Invalid content length"}, status_code=400)
-            body_limit = MAX_BYTES + 64 * 1024
+            body_limit = (200 * 1024 * 1024 if request.url.path == "/api/restore" else MAX_BYTES) + 64 * 1024
+            size_error = "Backup exceeds 200 MB" if request.url.path == "/api/restore" else "Recording exceeds 20 MB"
             if length > body_limit:
-                return JSONResponse({"detail": "Recording exceeds 20 MB"}, status_code=413)
+                return JSONResponse({"detail": size_error}, status_code=413)
             received = 0
             original_receive = request._receive
 
@@ -178,7 +210,7 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
                 message = await original_receive()
                 received += len(message.get("body", b""))
                 if received > body_limit:
-                    raise HTTPException(413, "Recording exceeds 20 MB")
+                    raise HTTPException(413, size_error)
                 return message
 
             request._receive = bounded_receive
@@ -196,7 +228,7 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
 
     @app.get("/api/config")
     def config():
-        return {"token": token, "model": analyser.status(), "limits": {"maxBytes": MAX_BYTES, "maxDuration": 30}, "version": "1"}
+        return {"token": token, "model": analyser.status(), "limits": {"maxBytes": MAX_BYTES, "maxDuration": 30}, "version": "2", "backup": {"maxBytes": 200 * 1024 * 1024, "maxRecords": 500}, "features": {"observations": True, "portableBackup": True, "selectedInterval": True}}
 
     @app.get("/api/state")
     def state():
@@ -209,8 +241,9 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
 
     @app.post("/api/visits")
     def add_visit(body: VisitInput):
-        require("routes", body.routeId)
-        return store.put("visits", {"id": identifier(), "routeId": body.routeId, "title": body.title, "createdAt": now()})
+        with state_lock:
+            require("routes", body.routeId)
+            return store.put("visits", {"id": identifier(), "routeId": body.routeId, "title": body.title, "createdAt": now()})
 
     def import_path(path, filename, visit_id, stop_id, note, demo=False, info=None):
         visit = require("visits", visit_id)
@@ -295,18 +328,23 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
         return FileResponse(path, filename=clip["filename"], media_type=mime, content_disposition_type="inline")
 
     @app.post("/api/clips/{clip_id}/analyse")
-    def analyse(clip_id: str):
+    def analyse(clip_id: str, body: AnalyseInput | None = None):
+        start_seconds = body.startSeconds if body else 0
         with state_lock:
             clip = require("clips", clip_id)
+            if start_seconds >= clip["duration"]:
+                raise HTTPException(400, "Selected interval starts after the recording ends")
             if clip["status"] == "analysing":
                 raise HTTPException(409, "This recording is already queued or analysing")
             if not analyser.status().get("ready"):
                 raise HTTPException(409, "Prepare the local model before analysis")
             job_id = identifier()
-            jobs[job_id] = {"id": job_id, "status": "queued"}
+            jobs[job_id] = {"id": job_id, "status": "queued", "clipId": clip_id, "startSeconds": start_seconds}
+            active_jobs.add(job_id)
             try:
-                pending.put_nowait((job_id, clip_id))
+                pending.put_nowait((job_id, clip_id, start_seconds))
             except queue.Full:
+                active_jobs.discard(job_id)
                 jobs.pop(job_id)
                 raise HTTPException(429, "Analysis queue is full. Try again shortly.")
             clip.update(status="analysing")
@@ -316,7 +354,7 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
             for old in list(jobs):
                 if len(jobs) <= 100:
                     break
-                if jobs[old]["status"] in {"done", "failed"}:
+                if old not in active_jobs and jobs[old]["status"] in {"done", "failed", "cancelled"}:
                     del jobs[old]
             return {"jobId": job_id, "status": "queued"}
 
@@ -352,6 +390,9 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
             for clip in store.all("clips"):
                 if clip["visitId"] == visit_id:
                     remove_clip(clip["id"])
+            for observation in store.all("observations"):
+                if observation["visitId"] == visit_id:
+                    store.delete("observations", observation["id"])
             store.delete("visits", visit_id)
         return {"deleted": True}
 
@@ -363,6 +404,101 @@ def create_app(data_dir=None, analyser=None, validator=None, allowed_hosts=None)
                 raise HTTPException(409, "Delete this route's visits before removing the route")
             store.delete("routes", route_id)
         return {"deleted": True}
+
+    @app.patch("/api/routes/{route_id}")
+    def rename_route(route_id: str, body: RouteRename):
+        if not body.name.strip():
+            raise HTTPException(400, "A name is required")
+        with state_lock:
+            record = require("routes", route_id)
+            record["name"] = body.name.strip()
+            return store.put("routes", record)
+
+    @app.patch("/api/visits/{visit_id}")
+    def rename_visit(visit_id: str, body: VisitRename):
+        if not body.title.strip():
+            raise HTTPException(400, "A title is required")
+        with state_lock:
+            record = require("visits", visit_id)
+            record["title"] = body.title.strip()
+            return store.put("visits", record)
+
+    @app.post("/api/observations")
+    def observation(body: ObservationInput):
+        with state_lock:
+            visit = require("visits", body.visitId)
+            route = require("routes", visit["routeId"])
+            if body.stopId not in {s["id"] for s in route["stops"]}:
+                raise HTTPException(400, "Stop does not belong to this visit's route")
+            existing = next((o for o in store.all("observations") if o["visitId"] == body.visitId and o["stopId"] == body.stopId), None)
+            return store.put("observations", {**body.model_dump(), "id": existing["id"] if existing else identifier(), "updatedAt": now()})
+
+    @app.post("/api/jobs/{job_id}/cancel")
+    def cancel_job(job_id: str):
+        with state_lock:
+            if job_id not in jobs:
+                raise HTTPException(404, "Job not found")
+            job = jobs[job_id]
+            if job["status"] in {"queued", "running"}:
+                job["status"] = "cancelled"
+                clip = store.get("clips", job["clipId"])
+                if clip:
+                    clip["status"] = "ready"
+                    store.put("clips", clip)
+            return dict(job)
+
+    @app.get("/api/clips/{clip_id}/waveform")
+    def waveform(clip_id: str):
+        from .audio import audio_preview
+        with state_lock:
+            clip = require("clips", clip_id)
+            path = store.audio_dir / clip["id"]
+        try:
+            key = (clip_id, path.stat().st_mtime_ns)
+            with state_lock:
+                cached = waveform_cache.get(key)
+            if cached is not None:
+                return cached
+            result = audio_preview(path)
+            with state_lock:
+                if len(waveform_cache) >= 20:
+                    waveform_cache.pop(next(iter(waveform_cache)))
+                waveform_cache[key] = result
+            return result
+        except (ValueError, FileNotFoundError) as exc:
+            raise HTTPException(400, "Recording is unavailable or cannot be decoded") from exc
+
+    @app.get("/api/backup")
+    def backup():
+        from .backup import create_backup
+        try:
+            with state_lock:
+                archive = create_backup(store)
+            return Response(archive, media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="soundwalk-atlas-backup.zip"'})
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+
+    @app.post("/api/restore")
+    async def restore(file: UploadFile = File(...)):
+        from .backup import restore_backup, ARCHIVE_LIMIT
+        import tempfile
+        try:
+            with tempfile.TemporaryFile() as archive:
+                count = 0
+                while chunk := await file.read(65536):
+                    count += len(chunk)
+                    if count > ARCHIVE_LIMIT:
+                        raise HTTPException(413, "Backup exceeds 200 MB")
+                    archive.write(chunk)
+                archive.seek(0)
+                def apply():
+                    with state_lock:
+                        return restore_backup(store, archive, validator)
+                return await run_in_threadpool(apply)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)[:500]) from exc
+        finally:
+            await file.close()
 
     @app.get("/api/export")
     def export():

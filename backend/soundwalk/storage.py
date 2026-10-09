@@ -43,7 +43,7 @@ class Store:
 
     def state(self):
         with self.lock:
-            return {kind: self.all(kind) for kind in ("routes", "visits", "clips")}
+            return {kind: self.all(kind) for kind in ("routes", "visits", "clips", "observations")}
 
     def close(self):
         self.db.close()

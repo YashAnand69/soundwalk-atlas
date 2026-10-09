@@ -2,7 +2,7 @@
 
 A short listening walk. A private local audio model. A second visit that helps you notice what changed in your recordings.
 
-![Soundwalk Atlas interface](docs/ui-redesign.jpg)
+![Soundwalk Atlas interface](docs/ui-upgrade.png)
 
 Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. No real outdoor trial or contest entry is claimed.
 
@@ -11,7 +11,7 @@ Built October 2026 with Codex and research/build subagents. This is an original 
 1. Name a familiar route and its stops. Print the listening card.
 2. Listen first, write your own observation, optionally record a short clip with your phone's recorder.
 3. Back at your Mac, create a visit and import clips. Original notes are recorded before model suggestions.
-4. Analyse locally, listen, and confirm multiple categories or mark a recording uncertain.
+4. Choose a ten-second interval, analyse locally, listen, and confirm your own labels, reject mismatched suggestions or record uncertainty.
 5. Repeat the route and compare the two visits. Missing recordings remain missing.
 
 Model similarity is not confidence, species identification, decibel measurement or environmental quality. Short recordings do not establish a trend. The person remains authoritative.
@@ -31,6 +31,8 @@ cd ..
 .venv/bin/python scripts/run.py
 ```
 
+After installation, run `.venv/bin/python scripts/check_setup.py` for a read-only readiness check. On macOS, `scripts/start.command` launches the prepared installation without downloads.
+
 Open **http://127.0.0.1:8765**. The model preparation step downloads the exact pinned model once; analysis then uses local files only. Without model assets, the app supports preparation/review of existing data and reports that analysis needs setup; it never invents predictions. If `uv` is unavailable, create a Python 3.12 virtualenv and install the same requirement files with pip.
 
 Model location defaults to `~/.cache/soundwalk-atlas/<revision>`. Set `SOUNDWALK_MODEL_DIR` to an explicitly prepared local folder if needed. Application records/audio default to `~/.local/share/soundwalk-atlas`; set `SOUNDWALK_DATA_DIR` for an isolated demo. Neither private recordings nor model files belong in the source repository.
@@ -42,8 +44,8 @@ The app offers an explicitly **synthetic example**, created from mathematically 
 ## Audio and privacy boundaries
 
 - Input limits: 20 MB, at most 30 seconds; suggested capture is 10 seconds. Actual supported containers are checked by bounded decoding.
-- Analysis uses a deterministic first ten-second, 48 kHz mono window, padding shorter clips with zeros. Longer-file suggestions do not describe the entire recording.
-- Broad suggestions: birds, traffic, wind/leaves, water, machinery, people/voices and animals. Unknown/mixed judgments are made by the user; no unvalidated automatic confidence threshold.
+- Analysis uses a selected interval of up to ten seconds at 48 kHz mono, padding shorter clips with zeros. The first interval is the default. The actual waveform and last analysed interval are shown separately; moving the selector does not change saved predictions until you analyse again.
+- Eleven candidate categories: birds, traffic, wind/leaves, water, machinery, people/voices, animals, footsteps, paper rustling, rain and insects. Similarity matching always proposes candidates for non-silent audio; it cannot reliably detect unsupported sounds. Digital silence abstains, quiet/clipping warnings concern recording amplitude only. Human labels, multiple sounds, uncertainty and “none fits” remain separate judgments.
 - Bind only to loopback. Do not expose the service to a public interface or LAN to access it from a phone.
 - Phone-to-Mac recorder-file transfer is the supported outdoor path. This release does not promise on-phone inference, background browser recording or a fully offline phone PWA.
 - No cloud inference, third-party analytics or precise location is necessary. Avoid capturing bystander conversations. Local processing cannot retroactively provide recording consent.
@@ -80,3 +82,13 @@ Use [the field-trial guide](docs/FIELD-TRIAL.md) for two genuine outdoor visits 
 ## Interactive interface
 
 The redesigned field-instrument interface includes an original day/dusk landscape with selectable visual layers and pausable motion, a one-minute listening timer, real journal totals and keyboard-accessible station navigation. See [UI review evidence](docs/UI-REDESIGN-REVIEW.md). Illustrations are clearly imagined; they never claim to represent live audio or a measured environment.
+
+## Integrated journal upgrades
+
+Written observations work without recordings and retain context/time. Review labels are never automatically copied from model suggestions. Per-recording analysis can be cancelled; late results cannot overwrite cancelled work. Focus mode, next-action guidance, actual waveforms and responsive comparisons share the same journal interface. Decorative motion can be paused and follows reduced-motion preferences.
+
+A private ZIP backup includes original audio, notes, reviews and model provenance. Restore validates checksums, bounded audio, references and metadata, then adds new record IDs atomically; it never overwrites existing visits. Re-importing the same archive is rejected. Limits are 200 MB and 500 records/files as enforced by the archive validator. JSON export is records-only and is not a restore format. Private backups may contain conversations or sensitive notes: do not publish them. Unsaved browser drafts are not included in backups.
+
+Draft text survives internal navigation/reload in this browser's local storage; a pending selected file survives internal navigation but must be reselected after browser reload. Clearing browser data clears unsaved drafts. Saving is still necessary for portable records.
+
+See [upgrade review](docs/UPGRADE-REVIEW.md) and [evaluation protocol](docs/evaluation/README.md). Expanded prompts are a development improvement, not proof of independent field accuracy.

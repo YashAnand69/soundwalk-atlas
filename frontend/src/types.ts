@@ -24,12 +24,35 @@ export type Clip = {
     model: string;
     revision: string;
     window: string;
+    segment?: { startSeconds: number; endSeconds: number };
+    vocabularyVersion?: string;
+    matching?: string;
+    quality?: string[];
   };
-  review: null | { labels: string[]; uncertain: boolean; note: string };
+  review: null | {
+    labels: string[];
+    uncertain: boolean;
+    note: string;
+    mixed?: boolean;
+    mismatch?: boolean;
+  };
   status: string;
   error?: string;
 };
-export type State = { routes: Route[]; visits: Visit[]; clips: Clip[] };
+export type Observation = {
+  id: string;
+  visitId: string;
+  stopId: string;
+  note: string;
+  observedAt: string;
+  context: string;
+};
+export type State = {
+  routes: Route[];
+  visits: Visit[];
+  clips: Clip[];
+  observations?: Observation[];
+};
 export type Config = {
   token: string;
   model: { ready: boolean; status: string; revision?: string };
@@ -48,8 +71,12 @@ export function clipSummary(clips: Clip[]) {
   return reviewed
     .map((c) =>
       c.review!.uncertain
-        ? "Uncertain / mixed"
-        : c.review!.labels.join(", ") || "No labels",
+        ? c.review!.mixed === undefined
+          ? "Uncertain / mixed"
+          : "Uncertain"
+        : (c.review!.labels.join(", ") || "No labels") +
+          (c.review!.mixed ? " · multiple sounds" : "") +
+          (c.review!.mismatch ? " · model did not fit" : ""),
     )
     .join(" · ");
 }

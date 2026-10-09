@@ -8,7 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import App from "./App";
-import { clipSummary } from "./types";
+import { clipSummary, type Clip } from "./types";
 const route = {
   id: "r",
   name: "Park loop",
@@ -36,7 +36,11 @@ const clip = {
   review: null,
   status: "ready",
 };
-function setup(ready = true) {
+function setup(
+  ready = true,
+  duration = 10,
+  analysis: Clip["analysis"] = clip.analysis,
+) {
   const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     if (url === "/api/config")
@@ -53,9 +57,14 @@ function setup(ready = true) {
           { id: "v1", routeId: "r", title: "Morning", createdAt: "now" },
           { id: "v2", routeId: "r", title: "Evening", createdAt: "now" },
         ],
-        clips: [clip],
+        clips: [{ ...clip, duration, analysis }],
       });
+    if (url.endsWith("/waveform"))
+      return Response.json({ peaks: [0.1, 0.5, 0.2], duration: 10 });
+    if (url === "/api/observations")
+      return Response.json({ id: "o", ...JSON.parse(String(init?.body)) });
     if (url === "/api/clips") return Response.json(clip);
+    if (url === "/api/restore") return Response.json({restoredRoutes: 1, restoredVisits: 2, restoredClips: 3, restoredObservations: 4});
     if (url.endsWith("/review"))
       return Response.json({ ...clip, review: JSON.parse(String(init?.body)) });
     throw new Error("Unexpected " + url);
@@ -66,6 +75,7 @@ function setup(ready = true) {
 }
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.unstubAllGlobals();
 });
 describe("listening workflow", () => {
@@ -109,7 +119,9 @@ describe("listening workflow", () => {
       screen.getByLabelText("Your labels, separated by commas"),
       { target: { value: "wind, traffic" } },
     );
-    fireEvent.click(screen.getByLabelText(/Uncertain or mixed/));
+    fireEvent.click(
+      screen.getByLabelText(/Uncertain — I cannot give a firm label/),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Save my review" }));
     await waitFor(() =>
       expect(
@@ -290,5 +302,214 @@ describe("review summaries", () => {
         },
       ]),
     ).toBe("Uncertain / mixed");
+  });
+});
+
+describe("integrated trust and field workflow", () => {
+  it("saves a written observation without selecting any audio", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    fireEvent.change(screen.getAllByLabelText("Written listening note")[0], {
+      target: { value: "Leaves moving, no recording needed" },
+    });
+    fireEvent.change(screen.getAllByLabelText("Conditions / context")[0], {
+      target: { value: "After rain" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Save written observation" })[0],
+    );
+    await screen.findByText("Written observation saved");
+    const call = fetch.mock.calls.find(
+      ([u]) => String(u) === "/api/observations",
+    )!;
+    expect(JSON.parse(String(call[1]?.body))).toEqual({
+      visitId: "v1",
+      stopId: "s1",
+      note: "Leaves moving, no recording needed",
+      context: "After rain",
+      observedAt: "",
+    });
+    expect(fetch.mock.calls.some(([u]) => String(u) === "/api/clips")).toBe(
+      false,
+    );
+  });
+  it("separates unsupported matches, confidently mixed labels and uncertainty", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    fireEvent.click(screen.getByRole("button", { name: "Footsteps" }));
+    fireEvent.click(screen.getByRole("button", { name: "Paper rustling" }));
+    fireEvent.click(screen.getByLabelText("None of these model matches fits"));
+    fireEvent.click(screen.getByLabelText(/Multiple sounds heard/));
+    fireEvent.click(screen.getByRole("button", { name: "Save my review" }));
+    await screen.findByText("Your review is saved");
+    const call = fetch.mock.calls.find(([u]) => String(u).endsWith("/review"))!;
+    expect(JSON.parse(String(call[1]?.body))).toEqual({
+      labels: ["Footsteps", "Paper rustling"],
+      uncertain: false,
+      mixed: true,
+      mismatch: true,
+      note: "",
+    });
+  });
+  it("restores private notes when returning to a visit and clears saved upload drafts", async () => {
+    setup();
+    await screen.findByText("morning.wav");
+    fireEvent.change(screen.getAllByLabelText("Your observation")[0], {
+      target: { value: "Private morning draft" },
+    });
+    fireEvent.change(screen.getByLabelText("Visit"), {
+      target: { value: "v2" },
+    });
+    expect(
+      (screen.getAllByLabelText("Your observation")[0] as HTMLTextAreaElement)
+        .value,
+    ).toBe("");
+    fireEvent.change(screen.getByLabelText("Visit"), {
+      target: { value: "v1" },
+    });
+    expect(
+      (screen.getAllByLabelText("Your observation")[0] as HTMLTextAreaElement)
+        .value,
+    ).toBe("Private morning draft");
+    fireEvent.change(screen.getAllByLabelText(/Choose an audio recording/)[0], {
+      target: {
+        files: [new File(["RIFF"], "private.wav", { type: "audio/wav" })],
+      },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Save recording" })[0],
+    );
+    await waitFor(() =>
+      expect(localStorage.getItem("soundwalk:draft:upload:v1:s1")).toBe(null),
+    );
+  });
+  it("focus mode leaves the journal and corrections mounted", async () => {
+    setup();
+    await screen.findByText("morning.wav");
+    fireEvent.change(screen.getByLabelText("Review note"), {
+      target: { value: "Do not lose this" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Focus on journal" }));
+    expect(screen.queryByText("A field journal")).toBe(null);
+    expect(
+      (screen.getByLabelText("Review note") as HTMLInputElement).value,
+    ).toBe("Do not lose this");
+    expect(screen.getByRole("button", { name: "Show landscape" })).toBeTruthy();
+  });
+  it("analyses the selected segment without blocking another review", async () => {
+    const fetch = setup(true, 30);
+    await screen.findByText("morning.wav");
+    fireEvent.change(screen.getByLabelText("Analysis start (seconds)"), {
+      target: { value: "12" },
+    });
+    fetch.mockResolvedValueOnce(
+      Response.json({ jobId: "job1", status: "queued" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyse again locally" }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Cancel analysis" }),
+      ).toBeTruthy(),
+    );
+    const call = fetch.mock.calls.find(([u]) =>
+      String(u).endsWith("/analyse"),
+    )!;
+    expect(JSON.parse(String(call[1]?.body))).toEqual({ startSeconds: 12 });
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Save my review",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+    expect(
+      (
+        screen.getAllByRole("button", {
+          name: "Save written observation",
+        })[0] as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    fireEvent.change(screen.getAllByLabelText("Written listening note")[0], {
+      target: { value: "Still usable while analysing" },
+    });
+    expect(
+      (
+        screen.getAllByRole("button", {
+          name: "Save written observation",
+        })[0] as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+  });
+  it("draws decoded waveform samples rather than invented animation data", async () => {
+    setup();
+    await screen.findByText("morning.wav");
+    const svg = await screen.findByRole("img", {
+      name: /Waveform of your recording/,
+    });
+    expect(svg.querySelectorAll("line")).toHaveLength(3);
+    expect(screen.getByText("0.0–10.0 seconds selected")).toBeTruthy();
+  });
+});
+
+describe("analysis interval and quality provenance", () => {
+  it("keeps saved matches tied to their actual interval when selection changes", async () => {
+    setup(true, 24, {
+      ...clip.analysis,
+      segment: { startSeconds: 0, endSeconds: 10 },
+    });
+    await screen.findByRole("heading", { name: "Park loop" });
+    expect(
+      screen.getByText(/Last analysed interval: 0.0–10.0 seconds/),
+    ).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Analysis start (seconds)"), {
+      target: { value: "12" },
+    });
+    expect(
+      screen.getByText(/These saved matches describe the previous interval/),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Last analysed interval: 0.0–10.0 seconds/),
+    ).toBeTruthy();
+  });
+  it("explains silent abstention and still allows a human review", async () => {
+    setup(true, 10, {
+      ...clip.analysis,
+      suggestions: [],
+      quality: [
+        "Effectively silent digital segment; no sound suggestions generated.",
+      ],
+    });
+    await screen.findByRole("heading", { name: "Park loop" });
+    expect(screen.getByText(/Effectively silent digital segment/)).toBeTruthy();
+    expect(screen.getByText(/No usable candidate match/)).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Footsteps" }),
+    ).toBeTruthy();
+  });
+});
+
+
+describe("portable backup confirmation", () => {
+  it("does not transmit an archive before explicit confirmation and shows restore counts", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    const file = new File(["synthetic archive"], "journal.zip", {type: "application/zip"});
+    fireEvent.change(screen.getByLabelText("Restore backup"), {target: {files: [file]}});
+    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(false);
+    fireEvent.click(screen.getByRole("button", {name: "Restore as new walks"}));
+    await screen.findByText("Restored 1 walks, 2 visits, 3 recordings and 4 written observations.");
+    const call = fetch.mock.calls.find(([url]) => url === "/api/restore");
+    expect(call?.[1]?.body).toBeInstanceOf(FormData);
+    expect(screen.queryByRole("region", {name: "Confirm backup restore"})).toBeNull();
+  });
+  it("cancels a selected archive without a restore request", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    fireEvent.change(screen.getByLabelText("Restore backup"), {target: {files: [new File(["fixture"], "journal.zip")]}});
+    fireEvent.click(screen.getByRole("button", {name: "Cancel restore"}));
+    expect(screen.queryByRole("region", {name: "Confirm backup restore"})).toBeNull();
+    expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(false);
   });
 });
