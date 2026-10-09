@@ -69,14 +69,16 @@ export function clipSummary(clips: Clip[]) {
   const reviewed = clips.filter((c) => c.review);
   if (!reviewed.length) return "Not reviewed";
   return reviewed
-    .map((c) =>
-      c.review!.uncertain
-        ? c.review!.mixed === undefined
-          ? "Uncertain / mixed"
-          : "Uncertain"
-        : (c.review!.labels.join(", ") || "No labels") +
-          (c.review!.mixed ? " · multiple sounds" : "") +
-          (c.review!.mismatch ? " · model did not fit" : ""),
-    )
-    .join(" · ");
+    .map((c) => {
+      const review = c.review!;
+      return [
+        review.labels.join(", ") || "No confirmed label",
+        review.uncertain && "uncertain",
+        review.mixed && "multiple sounds",
+        review.mismatch && "model did not fit",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    })
+    .join("; ");
 }

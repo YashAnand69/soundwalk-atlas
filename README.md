@@ -98,3 +98,7 @@ See [upgrade review](docs/UPGRADE-REVIEW.md) and [evaluation protocol](docs/eval
 [Watch the public captioned walkthrough](https://yashanand69.github.io/soundwalk-atlas/#demo). The static demo page shows an edited 72-second sequence of actual application screens with synthetic data; it does not host the journal service or expose private recordings. [DEV draft](docs/DEV-SUBMISSION.md), [demo transcript](docs/demo/TRANSCRIPT.md) and [final checklist](docs/SUBMISSION-CHECKLIST.md) are provided. The article is prepared but not published.
 
 The new scroll-led trail draws an imagined path and moves a marker as the narrative scrolls, with slight depth movement in the landscape. It is not a real route tracker. Reveal motion is progressive enhancement, respects keyboard focus and reduced-motion preferences, and can be paused.
+
+## Submission readiness
+
+The [final readiness review](docs/FINAL-READINESS-REVIEW.md) records confirmed fixes, performed checks and remaining field-evidence limits. The [DEV article](docs/DEV-SUBMISSION.md) is an unpublished draft; the public demo and repository alone do not constitute a submitted challenge entry.

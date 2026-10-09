@@ -735,15 +735,35 @@ export default function App() {
                               )}
                               onSave={(values) =>
                                 act(async () => {
-                                  await request("/observations", {
-                                    method: "POST",
-                                    body: JSON.stringify({
-                                      ...values,
-                                      visitId: visit.id,
-                                      stopId: stop.id,
-                                    }),
-                                  });
-                                  await refresh();
+                                  const saved = await request<Observation>(
+                                    "/observations",
+                                    {
+                                      method: "POST",
+                                      body: JSON.stringify({
+                                        ...values,
+                                        visitId: visit.id,
+                                        stopId: stop.id,
+                                      }),
+                                    },
+                                  );
+                                  setState((current) => ({
+                                    ...current,
+                                    observations: [
+                                      ...(current.observations || []).filter(
+                                        (o) =>
+                                          !(
+                                            o.visitId === saved.visitId &&
+                                            o.stopId === saved.stopId
+                                          ),
+                                      ),
+                                      saved,
+                                    ],
+                                  }));
+                                  await refresh().catch(() =>
+                                    setError(
+                                      "Written observation saved, but the journal could not refresh. Use Refresh status to reconnect.",
+                                    ),
+                                  );
                                 })
                               }
                             />

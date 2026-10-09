@@ -307,11 +307,79 @@ describe("review summaries", () => {
           review: { labels: ["bird"], uncertain: true, note: "" },
         },
       ]),
-    ).toBe("Uncertain / mixed");
+    ).toBe("bird · uncertain");
+  });
+});
+
+describe("complete review summaries", () => {
+  it("preserves labels and every independent judgment", () => {
+    expect(
+      clipSummary([
+        {
+          ...clip,
+          review: {
+            labels: ["Footsteps", "Paper rustling"],
+            uncertain: true,
+            mixed: true,
+            mismatch: true,
+            note: "",
+          },
+        },
+      ]),
+    ).toBe(
+      "Footsteps, Paper rustling · uncertain · multiple sounds · model did not fit",
+    );
+  });
+  it("keeps no-label and mismatch judgments without inventing mixed sounds", () => {
+    expect(
+      clipSummary([
+        {
+          ...clip,
+          review: {
+            labels: [],
+            uncertain: false,
+            mismatch: true,
+            note: "",
+          },
+        },
+      ]),
+    ).toBe("No confirmed label · model did not fit");
   });
 });
 
 describe("integrated trust and field workflow", () => {
+  it("retains a successful note save when the subsequent refresh fails", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    const original = fetch.getMockImplementation()!;
+    let saved = false;
+    fetch.mockImplementation(async (input, init) => {
+      if (String(input) === "/api/observations") saved = true;
+      if (saved && String(input) === "/api/state") {
+        return Response.json(
+          { detail: "Journal temporarily unavailable" },
+          { status: 503 },
+        );
+      }
+      return original(input, init);
+    });
+    fireEvent.change(screen.getAllByLabelText("Written listening note")[0], {
+      target: { value: "Leaves moving after rain" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Save written observation" })[0],
+    );
+    await screen.findByText("Written observation saved");
+    expect(screen.getByText(/journal could not refresh/)).toBeTruthy();
+    expect(
+      localStorage.getItem("soundwalk:draft:observation:v1:s1"),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Compare visits/ }));
+    fireEvent.change(screen.getByLabelText("Second visit"), {
+      target: { value: "v2" },
+    });
+    expect(screen.getByText("Leaves moving after rain")).toBeTruthy();
+  });
   it("saves a written observation without selecting any audio", async () => {
     const fetch = setup();
     await screen.findByText("morning.wav");
