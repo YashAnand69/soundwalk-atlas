@@ -10,6 +10,8 @@ tags: devchallenge, hf26challenge
 
 What changes when you walk the same route twice—and actually listen?
 
+I chose this concept and shaped its direction through repeated design reviews, including requests for a more seamless interface and expressive scroll motion. I also supplied my own recordings of page turns and footsteps as development examples. AI agents handled implementation and automated checks; my role focused on product direction, design feedback and real development inputs.
+
 Soundwalk Atlas is a private listening journal built around that question. Prepare a few stops and a printable listening card, put the screen away, and write what you hear. A short phone recording is optional. Once home, an open-weight audio model offers a second perspective on your recordings. You replay them, accept or reject its suggestions, and keep your own interpretation.
 
 The order matters: observation first, AI afterwards. A written note without audio is a complete observation. You decide which labels belong in the journal, including when none fits or several sounds overlap. An unreviewed suggestion never becomes something you supposedly heard.
