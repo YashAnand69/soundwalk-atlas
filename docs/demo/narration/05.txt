@@ -1,0 +1,1 @@
+Back home, select an interval. Local, open-weight CLAP offers candidate matches. Similarity is not confidence, and suggestions can be wrong.

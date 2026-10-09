@@ -12,7 +12,7 @@ What changes when you walk the same route twice—and actually listen?
 
 Soundwalk Atlas is a private listening journal built around that question. Prepare a few stops and a printable listening card, put the screen away, and write what you hear. A short phone recording is optional. Once home, an open-weight audio model offers a second perspective on your recordings. You replay them, accept or reject its suggestions, and keep your own interpretation.
 
-The order matters: observation first, AI afterwards. A written note without audio is a complete observation. An unreviewed suggestion never becomes something you supposedly heard.
+The order matters: observation first, AI afterwards. A written note without audio is a complete observation. You decide which labels belong in the journal, including when none fits or several sounds overlap. An unreviewed suggestion never becomes something you supposedly heard.
 
 Return another day and compare the same stops: your notes, recording context and reviewed sound labels. The goal is to make a familiar place worth noticing again, without turning a walk into a classification score.
 
@@ -52,8 +52,16 @@ This release uses a phone's ordinary recorder followed by file transfer; it does
 
 ## My Agent Session
 
-I used OpenAI Codex and research, audio, backend and interface subagents to help plan, implement, test and review the project. Integration review corrected defects; this is not a claim of human-only authorship. The repository contains [stage reviews](https://github.com/YashAnand69/soundwalk-atlas/blob/main/docs/STAGE-REVIEWS.md) and engineering evidence, without publishing private recordings or session transcripts.
+### My role
+
+I chose Soundwalk Atlas from the proposed concepts and set its direction. I supplied my own recordings of book pages turning and footsteps as development inputs, with descriptions of what I recorded. These short development examples helped examine model suggestions; they do not establish an outdoor trial or independent accuracy study, and the recordings remain private.
+
+I reviewed the presentation and requested repeated refinements to the interface, scroll animation and overall quality. I wanted the experience to feel seamless while keeping human judgment central: suggestions should invite listening and correction, rather than manufacture certainty.
+
+### Working with agents
+
+I used OpenAI Codex and research, audio, backend and interface subagents to help plan, implement, test and review the project. Codex and the subagents produced the code and automated checks; integration review corrected defects. The repository contains [stage reviews](https://github.com/YashAnand69/soundwalk-atlas/blob/main/docs/STAGE-REVIEWS.md) and engineering evidence, without publishing private recordings or session transcripts.
 
 ## Prize Categories
 
-Overall challenge. This entry does not claim an optional partner category; local CLAP inference and Codex assistance alone do not establish use of a listed partner technology.
+Overall challenge.
