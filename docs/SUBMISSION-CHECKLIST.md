@@ -21,7 +21,7 @@ Live official challenge, template and Week 1 rules checked October 9, 2026. This
 
 ## Required before publishing
 
-- [x] Final refinements passed 46 interface tests, formatting, type and production-build checks; the unchanged backend previously passed 57 Python tests. See [final readiness review](FINAL-READINESS-REVIEW.md) and [premium UI review](PREMIUM-UI-REVIEW.md).
+- [x] Final October 10 refinements passed 47 interface and 59 Python tests, formatting, type and production-build checks. See [final readiness review](FINAL-READINESS-REVIEW.md) and [premium UI review](PREMIUM-UI-REVIEW.md).
 - [x] Produced a 72-second captioned edited walkthrough of actual UI screens with synthetic data; [transcript](demo/TRANSCRIPT.md) discloses saved model output and editing. Static public demo page prepared.
 - [x] Public demo page URL inserted into `DEV-SUBMISSION.md`; no required article placeholder remains.
 - [x] GitHub Pages built successfully; anonymous public video loaded (72 seconds, no media error) and playback was verified in the browser.

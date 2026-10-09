@@ -437,6 +437,45 @@ def test_backup_rejects_malformed_prediction_atomic(setup, bad):
     assert client.get('/api/state').json() == before
 
 
+@pytest.mark.parametrize('segment', [
+    {'startSeconds': 10, 'endSeconds': 20},
+    {'startSeconds': 0, 'endSeconds': 2},
+])
+def test_restore_rejects_analysis_beyond_decoded_audio_atomic(setup, segment):
+    import hashlib
+    import json
+    client, directory = setup
+    _, _, clip = create_clip(client)  # A one-second WAV, independent of archive metadata.
+    before = client.get('/api/state').json()
+    raw = client.get('/api/backup').content
+
+    def mutate(files):
+        state = json.loads(files['records.json'])
+        state['clips'][0]['duration'] = 20
+        state['clips'][0]['analysis'] = {
+            'suggestions': [{'label': 'Birds', 'score': .2}],
+            'model': 'local', 'revision': 'pinned', 'window': 'selected',
+            'segment': segment,
+        }
+        files['records.json'] = json.dumps(state).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['files']['records.json'] = {
+            'bytes': len(files['records.json']),
+            'sha256': hashlib.sha256(files['records.json']).hexdigest(),
+        }
+        files['manifest.json'] = json.dumps(manifest).encode()
+
+    response = client.post('/api/restore', files={
+        'file': ('inconsistent.zip', rewrite_zip(raw, mutate)),
+    })
+    assert response.status_code == 400
+    assert response.json()['detail'] == 'Invalid analysis interval'
+    assert client.get('/api/state').json() == before
+    assert list((directory / 'audio').iterdir()) == [directory / 'audio' / clip['id']]
+    assert (directory / 'audio' / clip['id']).read_bytes() == wav()
+    assert client.app.state.store.all('restores') == []
+
+
 def test_waveform_actual_decoded_preview(setup):
     client, _ = setup
     _, _, clip = create_clip(client)

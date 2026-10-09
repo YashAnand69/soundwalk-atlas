@@ -563,6 +563,38 @@ describe("analysis interval and quality provenance", () => {
 });
 
 describe("portable backup confirmation", () => {
+  it("reports a committed restore even when the following journal read fails", async () => {
+    const fetch = setup();
+    await screen.findByText("morning.wav");
+    const original = fetch.getMockImplementation()!;
+    let restored = false;
+    fetch.mockImplementation(async (input, init) => {
+      if (String(input) === "/api/restore") restored = true;
+      if (restored && String(input) === "/api/state") {
+        return Response.json({ detail: "Unavailable" }, { status: 503 });
+      }
+      return original(input, init);
+    });
+    fireEvent.change(screen.getByLabelText("Restore backup"), {
+      target: { files: [new File(["fixture"], "journal.zip")] },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Restore as new walks" }),
+    );
+    await screen.findByText(
+      "Restored 1 walk, 2 visits, 3 recordings and 4 written observations.",
+    );
+    expect(
+      screen.getByText(/Backup restored, but the journal could not refresh/),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("region", { name: "Confirm backup restore" }),
+    ).toBeNull();
+    expect(
+      fetch.mock.calls.filter(([url]) => url === "/api/restore"),
+    ).toHaveLength(1);
+  });
+
   it("does not transmit an archive before explicit confirmation and shows restore counts", async () => {
     const fetch = setup();
     await screen.findByText("morning.wav");

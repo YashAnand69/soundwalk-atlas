@@ -31,3 +31,16 @@ Two supplied indoor development recordings do not justify model fine-tuning or a
 The public demo is a 72-second edited sequence of captured screens with saved real inference output and synthetic fixtures. It is not continuous interaction or an outdoor trial. The operational application runs locally on a laptop; the public page hosts the recorded demo. No phone inference, source separation, species identification or environmental-health assessment is claimed.
 
 Before entry submission the entrant must review the final first-person article, personal eligibility and contest obligations, preview the official DEV template and publish with the required tags. Repository publication alone is not a challenge entry. Deadline: October 12, 2026 at 12:29 p.m. IST.
+
+## Final pre-publication audit — October 10, 2026
+
+A fresh independent technical and submission review found and corrected two additional reliability flaws:
+
+- Backup restoration previously validated saved analysis against declared archive duration before decoding. It now validates again against actual decoded duration before installing files or committing records. Two checksummed short-audio regressions reject out-of-range intervals and verify existing records, audio bytes and restore fingerprints stay unchanged.
+- Successful restoration followed by a failed journal read now retains the completed-import counts, clears confirmation and gives a reconnect warning instead of encouraging a duplicate retry. A regression verifies one restore request and distinct success/warning feedback.
+
+UI refinements increase working-journal supporting text size and contrast, use larger mobile controls and inputs, name recording players for assistive technology, and fix missing sentence spacing when the introductory line break is hidden. Browser checks at 390px show no horizontal overflow and confirm focus mode and readable supporting copy. No live location or field-use claim was added.
+
+Final checks: **59 Python tests and 47 interface tests passed**, along with TypeScript, production build, frontend formatting and diff whitespace checks. Python emitted one dependency deprecation warning, not a test failure. Production output: 84.47 kB gzip JavaScript, 11.39 kB gzip CSS.
+
+The official DEV template preview was checked with both required tags and truthful AI-generated writing disclosure. Publication remains pending; the general contest rules make entering an acceptance of legally binding terms, so a final entrant decision is required. Genuine outdoor experience remains absent and clearly disclosed.

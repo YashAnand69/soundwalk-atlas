@@ -1147,3 +1147,58 @@ footer p {
 .motion-paused .reading-progress {
   display: none;
 }
+
+/* Working journal copy must stay legible beside the decorative illustration. */
+.journal-intro > p,
+.model-note,
+.workflow-strip,
+.backup-notice,
+.workspace .tiny,
+.route-button small,
+aside .eyebrow,
+aside .tiny,
+.rename-controls .text-button {
+  color: #59634f;
+  font-size: 12px;
+}
+.workflow-strip .next-action,
+.workflow-strip .text-button,
+.journal-tools > summary,
+.journal-tools-menu a,
+.journal-tools-menu .refresh-button,
+.journal-tools-menu .restore-control,
+.sample,
+label,
+.label-chips button,
+.primary,
+.secondary,
+aside summary,
+aside .text-button {
+  font-size: 12px;
+}
+.route-button,
+.clip-head strong {
+  font-size: 14px;
+}
+input,
+textarea,
+select {
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  .tabs {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .primary,
+  .secondary,
+  .label-chips button,
+  .workflow-strip button {
+    min-height: 44px;
+  }
+}

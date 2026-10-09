@@ -242,6 +242,10 @@ def restore_backup(store, source, validator):
                         info = validator(path)
                     except Exception as exc:
                         raise ValueError("Backup contains an invalid recording") from exc
+                    # Archive metadata cannot establish the recording's true length.
+                    # Recheck provenance against decoded audio before installing files.
+                    if clip.get("analysis") is not None:
+                        clip["analysis"] = validate_analysis(clip["analysis"], info["duration"])
                     clip["duration"] = info["duration"]
                     clip["quality"] = info["quality"]
                     staged.append(path)

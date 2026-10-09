@@ -343,8 +343,7 @@ export default function App() {
           </div>
           <p>
             Keep what you noticed.
-            <br />
-            Return when the world sounds different.
+            <br /> Return when the world sounds different.
           </p>
         </div>
         <JournalStats state={state} />
@@ -472,11 +471,15 @@ export default function App() {
                     restoredClips: number;
                     restoredObservations: number;
                   }>("/restore", { method: "POST", body });
-                  await refresh();
                   setRestoreResult(
                     `Restored ${result.restoredRoutes} walk${result.restoredRoutes === 1 ? "" : "s"}, ${result.restoredVisits} visit${result.restoredVisits === 1 ? "" : "s"}, ${result.restoredClips} recording${result.restoredClips === 1 ? "" : "s"} and ${result.restoredObservations} written observation${result.restoredObservations === 1 ? "" : "s"}.`,
                   );
                   setPendingBackup(null);
+                  await refresh().catch(() =>
+                    setError(
+                      "Backup restored, but the journal could not refresh. Use Refresh status to reconnect; do not import the same backup again.",
+                    ),
+                  );
                 })
               }
             >
@@ -1455,7 +1458,12 @@ function ClipCard({
           {clip.review ? "Reviewed" : "Awaiting your review"}
         </span>
       </div>
-      <audio controls preload="none" src={"/api/clips/" + clip.id + "/audio"} />
+      <audio
+        aria-label={"Recording " + clip.filename}
+        controls
+        preload="none"
+        src={"/api/clips/" + clip.id + "/audio"}
+      />
       <Waveform clip={clip} start={start} onStart={setStart} />
       {clip.note && (
         <div className="original-observation">
