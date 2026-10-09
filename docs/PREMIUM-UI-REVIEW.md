@@ -22,3 +22,5 @@ Screenshots: `premium-hero.png` and `premium-trail.png`. The previous UI review 
 ## Publication boundary
 
 The public demo page is static; it does not host inference, access localhost or expose the private journal. The prepared DEV article follows the live official template. Genuine fieldwork remains recommended evidence, and independent evaluation is needed before accuracy claims. Neither is falsely claimed by the article. The DEV entry has not been published and personal eligibility/terms remain for the user to review.
+
+GitHub Pages built successfully from the public repository. The public player loaded the 72-second media and played without credentials or media errors. The reviewed candidate tag is `week1-submission-candidate`; this does not certify contest eligibility or publish a DEV entry.

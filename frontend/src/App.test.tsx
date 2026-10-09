@@ -511,7 +511,7 @@ describe("portable backup confirmation", () => {
       screen.getByRole("button", { name: "Restore as new walks" }),
     );
     await screen.findByText(
-      "Restored 1 walks, 2 visits, 3 recordings and 4 written observations.",
+      "Restored 1 walk, 2 visits, 3 recordings and 4 written observations.",
     );
     const call = fetch.mock.calls.find(([url]) => url === "/api/restore");
     expect(call?.[1]?.body).toBeInstanceOf(FormData);

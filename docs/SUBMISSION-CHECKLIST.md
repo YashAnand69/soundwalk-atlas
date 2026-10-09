@@ -24,10 +24,10 @@ Live official challenge, template and Week 1 rules checked October 9, 2026. This
 - [x] Final UI changes passed 43 interface and 57 Python tests, formatting, type and production-build checks. Browser review is recorded in [PREMIUM-UI-REVIEW.md](PREMIUM-UI-REVIEW.md).
 - [x] Produced a 72-second captioned edited walkthrough of actual UI screens with synthetic data; [transcript](demo/TRANSCRIPT.md) discloses saved model output and editing. Static public demo page prepared.
 - [x] Public demo page URL inserted into `DEV-SUBMISSION.md`; no required article placeholder remains.
-- [ ] Verify the public deployment and video playback without account credentials before final publication.
+- [x] GitHub Pages built successfully; anonymous public video loaded (72 seconds, no media error) and playback was verified in the browser.
 - [ ] Entrant reviews the article in their own voice, actual media and eligibility/contest obligations. No agent can certify the entrant's age or personal eligibility.
-- [ ] Check final public repository setup/link/history, source licenses and absence of private media, secrets, database/model assets or private ZIP archives.
-- [ ] Freeze/tag the reviewed submission revision and record its SHA. Describe post-deadline commits separately in README, as required by the challenge guidance.
+- [x] Reviewed source/history, model and synthetic media attribution. Private journal/audio/model cache, original user OPUS files and temporary captures are excluded.
+- [x] Reviewed candidate frozen under `week1-submission-candidate`; exact SHA recorded in the workspace handoff report. This is a candidate, not evidence of a submitted entry. Any later article/media changes need final review.
 - [ ] Create one DEV post from the official template, preview its formatting/video/repository links and tags, then publish before the deadline. Verify the public URL and timestamp; repository publication alone is not entry submission.
 
 ## Optional evidence that would strengthen the entry
@@ -39,4 +39,4 @@ Live official challenge, template and Week 1 rules checked October 9, 2026. This
 
 ## Publication handoff
 
-The draft is intentionally viable with the synthetic working demo. Remaining essential user input: editorial approval of the final first-person article and personal eligibility confirmation. Public deployment/playback and the candidate revision still require final verification. Genuine field notes are a recommended enhancement rather than a fabricated prerequisite. No entry has been submitted by this checklist.
+The draft is intentionally viable with the synthetic working demo. Remaining essential user input: editorial approval of the final first-person article and personal eligibility confirmation. The public demo and candidate revision are prepared and verified. Genuine field notes are a recommended enhancement rather than a fabricated prerequisite. No entry has been submitted by this checklist.

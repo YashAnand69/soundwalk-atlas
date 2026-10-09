@@ -474,7 +474,7 @@ export default function App() {
                   }>("/restore", { method: "POST", body });
                   await refresh();
                   setRestoreResult(
-                    `Restored ${result.restoredRoutes} walks, ${result.restoredVisits} visits, ${result.restoredClips} recordings and ${result.restoredObservations} written observations.`,
+                    `Restored ${result.restoredRoutes} walk${result.restoredRoutes === 1 ? "" : "s"}, ${result.restoredVisits} visit${result.restoredVisits === 1 ? "" : "s"}, ${result.restoredClips} recording${result.restoredClips === 1 ? "" : "s"} and ${result.restoredObservations} written observation${result.restoredObservations === 1 ? "" : "s"}.`,
                   );
                   setPendingBackup(null);
                 })
