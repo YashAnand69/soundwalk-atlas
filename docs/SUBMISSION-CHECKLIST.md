@@ -1,6 +1,6 @@
 # Hacktoberfest Week 1 submission checklist
 
-Live official challenge, template and Week 1 rules checked October 9, 2026. This file prepares an entry; it does not publish one or accept contest terms.
+Live official challenge, template and Week 1 rules checked October 9, 2026. Entry published October 10, 2026 (IST): [published Week 1 entry](https://dev.to/yashanand69/soundwalk-atlas-a-listening-walk-with-ai-that-waits-until-you-get-home-2718). This file records performed checks; it is not a guarantee of judging acceptance.
 
 [Challenge and official template](https://dev.to/challenges/hacktoberfest-week1-2026-10-05) · [Week 1 rules](https://dev.to/page/hacktoberfest-week1-2026-10-05-contest-rules) · [General rules](https://dev.to/page/official-hackathon-rules)
 
@@ -25,10 +25,10 @@ Live official challenge, template and Week 1 rules checked October 9, 2026. This
 - [x] Produced a 72-second captioned edited walkthrough of actual UI screens with synthetic data; [transcript](demo/TRANSCRIPT.md) discloses saved model output and editing. Static public demo page prepared.
 - [x] Public demo page URL inserted into `DEV-SUBMISSION.md`; no required article placeholder remains.
 - [x] GitHub Pages built successfully; anonymous public video loaded (72 seconds, no media error) and playback was verified in the browser.
-- [ ] Entrant reviews the article in their own voice, actual media and eligibility/contest obligations. No agent can certify the entrant's age or personal eligibility.
+- [x] Entrant reviews the article in their own voice, actual media and eligibility/contest obligations. No agent can certify the entrant's age or personal eligibility.
 - [x] Reviewed source/history, model and synthetic media attribution. Private journal/audio/model cache, original user OPUS files and temporary captures are excluded.
 - [x] Initial reviewed candidate frozen under `week1-submission-candidate`; refined candidate under `week1-submission-candidate-v2`; exact SHA recorded in the workspace handoff report. This is a candidate, not evidence of a submitted entry. Any later article/media changes need final review.
-- [ ] Create one DEV post from the official template, preview its formatting/video/repository links and tags, then publish before the deadline. Verify the public URL and timestamp; repository publication alone is not entry submission.
+- [x] Create one DEV post from the official template, preview its formatting/video/repository links and tags, then publish before the deadline. Verify the public URL and timestamp; repository publication alone is not entry submission.
 
 ## Optional evidence that would strengthen the entry
 
@@ -39,4 +39,4 @@ Live official challenge, template and Week 1 rules checked October 9, 2026. This
 
 ## Publication handoff
 
-The draft is intentionally viable with the synthetic working demo. Remaining essential user input: editorial approval of the final first-person article and personal eligibility confirmation. The public demo and candidate revision are prepared and verified. Genuine field notes are a recommended enhancement rather than a fabricated prerequisite. No entry has been submitted by this checklist.
+The [published Week 1 entry](https://dev.to/yashanand69/soundwalk-atlas-a-listening-walk-with-ai-that-waits-until-you-get-home-2718) was published after the entrant confirmed eligibility and accepted contest rules. Public article verification shows both `devchallenge` and `hf26challenge` tags and the Week 1 Touch Grass submission marker. Published timestamp: 2026-10-09T18:44:09Z = October 10 at 00:14:09 IST. Genuine field notes remain optional strengthening evidence, with absence disclosed.

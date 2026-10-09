@@ -2,7 +2,7 @@
 
 ## Assessment
 
-Soundwalk Atlas is a credible Week 1 submission candidate: it implements a complete listening-journal workflow and uses local open-weight CLAP inference as a meaningful second perspective. This is a readiness assessment, not a prediction of winning or certification of personal eligibility. The DEV entry remains unpublished.
+Soundwalk Atlas is a credible Week 1 submission candidate: it implements a complete listening-journal workflow and uses local open-weight CLAP inference as a meaningful second perspective. This is a readiness assessment, not a prediction of winning or certification of personal eligibility. The dated pre-publication findings below are preserved; see verified publication status at the end.
 
 The [official challenge](https://dev.to/challenges/hacktoberfest-week1-2026-10-05) and [rules](https://dev.to/page/hacktoberfest-week1-2026-10-05-contest-rules) emphasize writing most strongly and offer bonus consideration for actual outdoor experience. The revised article therefore leads with the listening ritual and a concrete model failure, rather than a catalogue of features.
 
@@ -44,3 +44,7 @@ UI refinements increase working-journal supporting text size and contrast, use l
 Final checks: **59 Python tests and 47 interface tests passed**, along with TypeScript, production build, frontend formatting and diff whitespace checks. Python emitted one dependency deprecation warning, not a test failure. Production output: 84.47 kB gzip JavaScript, 11.39 kB gzip CSS.
 
 The official DEV template preview was checked with both required tags and truthful AI-generated writing disclosure. Publication remains pending; the general contest rules make entering an acceptance of legally binding terms, so a final entrant decision is required. Genuine outdoor experience remains absent and clearly disclosed.
+
+## Verified publication — October 10, 2026
+
+The [published Week 1 entry](https://dev.to/yashanand69/soundwalk-atlas-a-listening-walk-with-ai-that-waits-until-you-get-home-2718) is live on @yashanand69. The article shows both required tags and the Week 1 Touch Grass submission marker. Its published timestamp is 2026-10-09T18:44:09Z (October 10, 00:14:09 IST). The entrant explicitly confirmed eligibility and accepted the contest rules immediately before publication. AI writing disclosure and synthetic-demo boundaries remain visible. This records publication, not a prize or judging acceptance.

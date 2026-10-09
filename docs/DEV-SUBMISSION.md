@@ -1,6 +1,6 @@
 ---
 title: Soundwalk Atlas — a listening walk, with AI that waits until you get home
-published: false
+published: true
 tags: devchallenge, hf26challenge
 ---
 
