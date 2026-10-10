@@ -16,6 +16,10 @@ Built October 2026 with Codex and research/build subagents. This is an original 
 
 Model similarity is not confidence, species identification, decibel measurement or environmental quality. Short recordings do not establish a trend. The person remains authoritative.
 
+## Public walkthrough
+
+[Try the public review exercise on Vercel](https://soundwalk-atlas.vercel.app/#review) or [watch the app demo](https://soundwalk-atlas.vercel.app/#demo). Vercel serves the static `docs` directory, including synthetic sample audio and saved model output. It does not host the private journal or CLAP inference. The [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/#review) remains available.
+
 ## Run locally
 
 Requirements: Python 3.12, Node 20.19+ or 22.12+, npm, and enough free memory/disk for the pinned CLAP checkpoint. The verified machine and measurements are recorded in `docs/STAGE-REVIEWS.md` after validation. No paid API is needed.

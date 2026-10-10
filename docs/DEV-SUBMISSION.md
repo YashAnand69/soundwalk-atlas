@@ -14,7 +14,7 @@ That failure became the centre of Soundwalk Atlas: listen first, let AI offer a 
 
 I chose the listening-journal concept, supplied my own recordings of page turns and footsteps as development examples, and directed repeated refinements to the interface and scroll motion. AI agents handled implementation and automated checks. My work focused on choosing the experience, reviewing its presentation and bringing real inputs into development.
 
-Soundwalk Atlas is a private listening journal built around that question. Prepare a few stops and a printable listening card, put the screen away, and write what you hear. A short phone recording is optional. Once home, an open-weight audio model offers a second perspective on your recordings. You replay them, accept or reject its suggestions, and keep your own interpretation.
+Soundwalk Atlas is a private listening journal built around that principle. Prepare a few stops and a printable listening card, put the screen away, and write what you hear. A short phone recording is optional. Once home, an open-weight audio model offers a second perspective on your recordings. You replay them, accept or reject its suggestions, and keep your own interpretation.
 
 The order matters: observation first, AI afterwards. A written note without audio is a complete observation. You decide which labels belong in the journal, including when none fits or several sounds overlap. An unreviewed suggestion never becomes something you supposedly heard.
 
@@ -22,9 +22,9 @@ Return another day and compare the same stops: your notes, recording context and
 
 ## Demo
 
-[Try the no-install review walkthrough](https://yashanand69.github.io/soundwalk-atlas/#review) · [Watch the working app demo](https://yashanand69.github.io/soundwalk-atlas/#demo)
+[Try the no-install review walkthrough](https://soundwalk-atlas.vercel.app/#review) · [Watch the working app demo](https://soundwalk-atlas.vercel.app/#demo)
 
-The interactive walkthrough lets you write an observation, inspect a saved real-model result and make your own review. It uses a labelled synthetic sample; it does not run live inference or store a private journal. The full application runs locally on your Mac.
+The interactive walkthrough lets you write an observation, inspect a saved real-model result and make your own review. It uses a labelled synthetic sample; it does not run live inference or store a private journal. Vercel hosts this public static experience and the recorded demo; the full private journal, recording import and CLAP inference run locally on your Mac. Vercel is not running an inference backend for this project. [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/#review) is also available.
 
 The captioned 72-second video is an edited walkthrough of captured app screens, including saved results from real local inference. It does not show continuous interaction or inference wait times. Its recordings are clearly labelled procedural synthetic fixtures, not an outdoor trip. No completed outdoor trial or independent field-accuracy result is claimed.
 
