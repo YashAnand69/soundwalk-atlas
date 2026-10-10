@@ -2,7 +2,7 @@
 
 A short listening walk. A private local audio model. A second visit that helps you notice what changed in your recordings.
 
-![Soundwalk Atlas interface](docs/premium-hero.png)
+![Soundwalk Atlas public field guide](docs/atlas-desktop.png)
 
 Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. The Week 1 entry is published; a real outdoor trial remains unperformed.
 
@@ -16,9 +16,13 @@ Built October 2026 with Codex and research/build subagents. This is an original 
 
 Model similarity is not confidence, species identification, decibel measurement or environmental quality. Short recordings do not establish a trend. The person remains authoritative.
 
-## Public walkthrough
+## Start on your phone
 
-[Try the public review exercise on Vercel](https://soundwalk-atlas.vercel.app/#review) or [watch the app demo](https://soundwalk-atlas.vercel.app/#demo). Vercel serves the static `docs` directory, including synthetic sample audio and saved model output. It does not host the private journal or CLAP inference. The [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/#review) remains available.
+[Open the pocket journal](https://soundwalk-atlas.vercel.app/walk.html) to keep written observations without installing the AI stack. Name familiar stops, listen, save a note, and revisit to compare your own words. A seated listening session works too. An optional one-minute timer offers a quiet prompt rather than a score.
+
+Notes are stored in this browser on this website, with no account, GPS, cloud sync or microphone access. Clearing site data can remove them; export a copy. The Vercel and GitHub Pages versions use separate browser storage. Pocket exports do not automatically import into the desktop journal. The full desktop app below handles recording import, private audio backups and local CLAP inference.
+
+[Explore the field guide](https://soundwalk-atlas.vercel.app/) · [Try the saved-result review](https://soundwalk-atlas.vercel.app/#review) · [Watch the desktop demo](https://soundwalk-atlas.vercel.app/#demo). Vercel serves the static `docs` directory; it does not run an inference backend. [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/).
 
 ## Run locally
 

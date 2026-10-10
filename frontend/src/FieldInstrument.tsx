@@ -395,7 +395,7 @@ export function ListeningTimer() {
         <h3>
           {remaining === 0
             ? "What did you notice?"
-            : "Pause. Then press record."}
+            : "Pause. Notice one thing."}
         </h3>
         <p>
           Notice one near sound, one far sound, and what fills the space

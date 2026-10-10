@@ -22,13 +22,15 @@ Return another day and compare the same stops: your notes, recording context and
 
 ## Demo
 
-[Try the no-install review walkthrough](https://soundwalk-atlas.vercel.app/#review) · [Watch the working app demo](https://soundwalk-atlas.vercel.app/#demo)
+[Open the pocket listening journal](https://soundwalk-atlas.vercel.app/walk.html) · [Try the no-install review walkthrough](https://soundwalk-atlas.vercel.app/#review) · [Watch the working app demo](https://soundwalk-atlas.vercel.app/#demo)
 
-The interactive walkthrough lets you write an observation, inspect a saved real-model result and make your own review. It uses a labelled synthetic sample; it does not run live inference or store a private journal. Vercel hosts this public static experience and the recorded demo; the full private journal, recording import and CLAP inference run locally on your Mac. Vercel is not running an inference backend for this project. [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/#review) is also available.
+The new pocket journal works in a phone browser: choose familiar stops, take written observations, save them on this device, then return for another visit and compare. The optional timer is a prompt to put the screen away. There is no account, GPS or microphone permission. A seated listening session is welcome. Export a copy to keep it; clearing browser data may remove local notes. It is a small useful activity even without a model download.
+
+The interactive walkthrough lets you write an observation, inspect a saved real-model result and make your own review. It uses a labelled synthetic sample; it does not run live inference or store a private journal. Vercel hosts the static pocket journal, sample exercise and recorded demo. Pocket notes stay in this browser and do not sync to the separate desktop journal. Recording import and CLAP inference run locally on your Mac. Vercel is not running an inference backend for this project. [GitHub Pages mirror](https://yashanand69.github.io/soundwalk-atlas/#review) is also available.
 
 The captioned 72-second video is an edited walkthrough of captured app screens, including saved results from real local inference. It does not show continuous interaction or inference wait times. Its recordings are clearly labelled procedural synthetic fixtures, not an outdoor trip. No completed outdoor trial or independent field-accuracy result is claimed.
 
-![The scroll-led illustrated listening trail](https://raw.githubusercontent.com/YashAnand69/soundwalk-atlas/main/docs/premium-trail.png)
+![The illustrated field guide: a little less screen, a little more world](https://raw.githubusercontent.com/YashAnand69/soundwalk-atlas/main/docs/atlas-desktop.png)
 
 ## Code
 
@@ -38,7 +40,9 @@ The application source is MIT licensed. Setup instructions, synthetic fixture pr
 
 ## How I Built It
 
-React and TypeScript provide the journal interface. Scrolling draws an illustrated trail and moves a marker through the listening ritual; it is decorative, not location tracking. Focus mode, motion controls and reduced-motion support keep the working forms accessible. A local Python/FastAPI service stores visits, observations and reviews in SQLite, retaining original recordings for replay.
+The public field guide uses lightweight HTML, CSS and an original SVG landscape, with a scroll-driven trail marker, daylight/dusk and a motion pause. No 3D engine is needed. The pocket journal uses browser-local storage and portable exports. The design follows a simple sequence—arrive, listen, return—and keeps animation away from writing. [Design research and limitations](https://github.com/YashAnand69/soundwalk-atlas/blob/main/docs/DESIGN-RESEARCH-2026-10-10.md) record the sources and decisions.
+
+React and TypeScript provide the desktop journal interface. Scrolling draws an illustrated trail and moves a marker through the listening ritual; it is decorative, not location tracking. Focus mode, motion controls and reduced-motion support keep the working forms accessible. A local Python/FastAPI service stores visits, observations and reviews in SQLite, retaining original recordings for replay.
 
 The AI is [LAION CLAP](https://huggingface.co/laion/clap-htsat-unfused), which compares audio and descriptive text in a shared embedding space. It matches a selected interval of up to ten seconds against eleven versioned sound prompts, then offers two candidates. Model revision, prompts and analysed interval travel with the result. The waveform comes from decoded audio, and changing the selected interval does not silently alter an existing prediction.
 

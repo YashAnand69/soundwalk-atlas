@@ -1,30 +1,444 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Soundwalk Atlas: a local listening journal with open-weight AI and human review. Watch the synthetic workflow demo and explore the source.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Soundwalk Atlas — a little more world</title>
-  <style>
-    :root{color:#293b2c;background:#f5f3ec;font-family:"Avenir Next","Segoe UI",sans-serif;line-height:1.7}*{box-sizing:border-box}body{margin:0}main,header,footer{max-width:1060px;margin:auto;padding:28px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d7dccc}header>a{text-decoration:none;font-size:22px;letter-spacing:-1px}header em,h1,h2{font-family:Baskerville,Georgia,serif;font-weight:400}small,.eyebrow{text-transform:uppercase;font-size:9px;letter-spacing:2px;color:#849173}.intro{padding:55px 0 35px}.eyebrow{color:#a38257}h1{font-size:clamp(48px,7vw,80px);line-height:1.02;letter-spacing:-2.5px;margin:20px 0}h1 i{color:#839176}.intro>p{max-width:600px;color:#6d7963;font-size:14px}.links{display:flex;gap:15px;flex-wrap:wrap;margin-top:27px}a{color:inherit}.button{background:#2e4734;color:#f0eedf;border-radius:2px;padding:12px 19px;font-size:12px;text-decoration:none}.secondary{background:transparent;border:1px solid #cbd4c0;color:#455c3b}.demo{padding-top:30px;border-top:1px solid #d7dccc}.demo h2{font-size:32px;margin:0 0 9px}.demo>p{font-size:12px;color:#78846c}video{display:block;width:100%;max-height:78vh;background:#253c33;margin-top:25px;border-radius:3px}.boundaries{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;padding:36px 0}.boundaries h3{font-size:12px;font-weight:500}.boundaries p{font-size:11px;color:#7a856e}footer{border-top:1px solid #d7dccc;display:flex;justify-content:space-between;font-size:10px;color:#849173}.note{padding:16px 20px;background:#e9ecdf;font-size:11px;margin-top:20px}a:focus-visible,video:focus-visible{outline:3px solid #a38257;outline-offset:5px}@media(max-width:600px){header,main,footer{padding:22px}.intro{padding-top:35px}header small{font-size:6px}.boundaries{grid-template-columns:1fr;gap:5px}footer{flex-wrap:wrap;gap:14px}video{max-height:70vh}}
-
-.review{padding:40px 0;border-top:1px solid #d7dccc}.review h2{font:400 36px Baskerville,Georgia,serif;margin:8px 0}.review p{max-width:720px}.lab{padding:clamp(20px,4vw,40px);border:1px solid #cbd4c0;background:#fffdf6;border-radius:12px}.lab textarea,.lab input[type=text]{display:block;width:100%;padding:14px;font:inherit;border:1px solid #899980;background:#fffdf9;color:#293b2c;border-radius:5px;margin:8px 0 18px}.lab button{font:inherit;padding:10px 18px;border:1px solid #2e4734;border-radius:5px;background:#2e4734;color:#fffdf6;cursor:pointer}.lab audio{display:block;width:100%;margin:15px 0}.lab fieldset{border:0;padding:0;margin:22px 0}.lab legend{font-weight:600;margin-bottom:12px}.label-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.label-grid label,.judgments label{display:flex;align-items:center;gap:8px;padding:9px;background:#eef0e6;border-radius:5px}.judgments{display:grid;gap:8px}.lab input[type=checkbox]{width:18px;height:18px;accent-color:#2e4734}.candidates{padding:20px;border-left:3px solid #a38257;background:#eeedde}.lab pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#eeedde;padding:20px}.lab [hidden]{display:none!important}.lab button:focus-visible,.lab input:focus-visible,.lab textarea:focus-visible{outline:3px solid #a38257;outline-offset:3px}.lab [tabindex="-1"]:focus{outline:none}.sample-status{font-size:13px;min-height:24px}.lab summary{cursor:pointer}.review-guide{padding:20px 0}.review-guide li{margin:10px 0}.intro>p,.demo>p,.boundaries p{font-size:15px;color:#52614b}.note{font-size:14px}@media(max-width:600px){.label-grid{grid-template-columns:1fr 1fr}.review h2{font-size:30px}}@media(prefers-reduced-motion:no-preference){.lab button{transition:background .18s,transform .18s}.lab button:hover{background:#456447;transform:translateY(-1px)}}
-  </style>
-</head>
-<body>
-<header><a href="#">◌ Soundwalk <em>Atlas</em></a><small>Local first · human reviewed</small></header>
-<main>
-  <section class="intro"><span class="eyebrow">A personal field guide</span><h1>Make room<br>to <i>listen.</i></h1><p>A few familiar stops. A written observation. A second visit. Soundwalk Atlas makes the screen a short part of a listening walk, with open-weight AI that offers a second perspective when you get home.</p><div class="links"><a class="button" href="#review">Try a review ↓</a><a class="button secondary" href="https://github.com/YashAnand69/soundwalk-atlas">Explore the source ↗</a></div></section>
-
-<section class="review" id="review"><span class="eyebrow">Listen · Question · Decide</span><h2>Your ears have the final say.</h2><p>Try one decision from the journal without installing anything. This is a public sample exercise with a <strong>saved real-model result</strong>, not live inference. Your answers stay in this page until reset or reload.</p>
-<div class="lab" id="review-lab"><div id="sample-start"><h3>1. Listen before seeing a label</h3><p>This six-second clip is generated noise, not a field recording. Listen and describe its character in your own words.</p><audio controls preload="metadata" aria-label="Six-second procedural noise sample"><source src="demo/review-sample.wav" type="audio/wav"></audio><label for="sample-observation">Your observation (optional)</label><textarea id="sample-observation" rows="3" placeholder="What does it sound like? What are you unsure about?"></textarea><button id="reveal-candidates" type="button">Reveal the saved suggestions →</button></div>
-<div id="sample-review" hidden><h3 id="sample-review-heading" tabindex="-1">2. Question the suggestion</h3><p>Your original observation: <span id="original-observation"></span></p><div class="candidates"><strong>Saved LAION CLAP candidates</strong><p>Running water: 0.3168<br>Rain: 0.30821</p><small>Relative similarity, not confidence</small></div><p>The model heard water-like qualities in noise. There was no outdoor stream or rain behind this recording. A plausible match is a reason to listen again, not proof of its source.</p><audio controls preload="none" aria-label="Replay the same procedural noise"><source src="demo/review-sample.wav" type="audio/wav"></audio><fieldset><legend>3. Keep your own interpretation</legend><div class="label-grid" id="review-labels"></div></fieldset><label for="review-other">Your own description or correction</label><input id="review-other" type="text" placeholder="For example: generated hiss; source cannot be inferred"><fieldset class="judgments"><legend>Separate judgments</legend><label><input id="review-none" type="checkbox">None of the vocabulary fits</label><label><input id="review-mixed" type="checkbox">Several sounds overlap</label><label><input id="review-uncertain" type="checkbox">I am uncertain</label></fieldset><button id="save-review" type="button">Show my review →</button></div>
-<div id="review-summary" hidden><h3 id="review-summary-heading" tabindex="-1">Your observation and AI remain separate.</h3><p>This preview records your decision without changing the saved machine candidates. It is a sample exercise, not a saved visit in the full app.</p><pre id="review-result"></pre></div><p id="review-status" class="sample-status" role="status" aria-live="polite"></p><button id="reset-review" type="button">Reset this sample</button><details><summary>Where did the audio and result come from?</summary><p>Original CC0 procedural noise, six seconds, seed 20261007. Actual offline CLAP run, pinned revision 8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a, vocabulary v2, interval 0–6 seconds. No private recordings are published.</p><a href="demo/review-sample.md">Provenance and limits</a> · <a href="benchmark-model-v2.json">Recorded model output</a></details></div>
-<div class="review-guide"><h3>Take the idea outside</h3><ol><li>Choose three familiar stops. Put the screen away and listen for a minute at each.</li><li>Write one observation before using AI. A recording is optional; a note alone is complete.</li><li>Back home, replay and review. Record whether a suggestion added something useful or needed rejecting.</li></ol><p>We have not completed an outdoor trial. <a href="FIELD-TRIAL.md">Use the blank field-trial worksheet</a> to document a real walk. The <a href="USEFULNESS-REVIEW.md">development review</a> includes relevant matches and known failures.</p></div></section>
-  <section class="demo" id="demo"><h2>A working journal, honestly demonstrated.</h2><p>72-second edited walkthrough made from captured application screens. All journal audio shown is procedural synthetic data. It is not an outdoor trial or independent accuracy evaluation.</p><video controls playsinline preload="metadata" poster="premium-hero.png" aria-label="Soundwalk Atlas captioned synthetic UI walkthrough"><source src="demo/soundwalk-atlas-demo.mp4" type="video/mp4"><p><a href="demo/soundwalk-atlas-demo.mp4">Download the captioned demo video</a></p></video><p><a href="demo/TRANSCRIPT.md">Read the demo transcript</a> · <a href="demo/soundwalk-atlas-demo.mp4" download>Download video</a></p><div class="note">This public page offers the sample review exercise above and the recorded workflow. Run the application on your own Mac using the repository instructions. Your actual journal, original audio and model inference remain on that computer.</div></section>
-  <section class="boundaries" aria-label="Project principles"><div><h3>Listen before you label</h3><p>Written notes work without audio. Model candidates never become human labels automatically. Reject, correct or preserve uncertainty.</p></div><div><h3>Open, local inference</h3><p>A pinned LAION CLAP model runs from prepared local assets. A one-time download is necessary. Candidate similarities are not confidence or sound-level measurements.</p></div><div><h3>Return with curiosity</h3><p>Compare observations at the same stops. Private ZIP backups preserve audio and reviews. Synthetic samples demonstrate these features without inventing field results.</p></div></section>
-</main>
-<footer><span>Soundwalk Atlas · Yash Anand</span><a href="https://github.com/YashAnand69/soundwalk-atlas/blob/main/README.md">Setup, licenses and AI assistance disclosure ↗</a></footer>
-<script src="demo/review-sample.js" defer></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A pocket listening journal. Notice your surroundings, keep your own observations, and return to the same stops. Optional local AI review when you get home."
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Soundwalk Atlas — a little more world</title>
+    <link rel="stylesheet" href="atlas.css?v=20261011" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="#"
+        ><img src="favicon.svg" alt="" width="30" height="30" />Soundwalk
+        <em>Atlas</em></a
+      >
+      <nav aria-label="Main">
+        <a href="#ritual">The ritual</a><a href="#review">Try a review</a
+        ><a class="nav-walk" href="walk.html"
+          >Take a walk <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+      <button
+        class="motion-toggle"
+        id="motion-toggle"
+        type="button"
+        aria-pressed="false"
+      >
+        Pause motion
+      </button>
+    </header>
+    <main id="main">
+      <section class="intro" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <p class="eyebrow">
+            <span class="small-dot"></span> A field guide to paying attention
+          </p>
+          <h1 id="intro-title">
+            A little less screen.<br />A little more <em>world.</em>
+          </h1>
+          <p class="intro-description">
+            Take the familiar way. Hear it differently.<br />A few quiet stops,
+            a note in your own words, and a reason to come back.
+          </p>
+          <div class="links">
+            <a class="button" href="walk.html"
+              >Begin a listening walk <span aria-hidden="true">↗</span></a
+            ><a class="text-link" href="#review"
+              >Explore the idea <span aria-hidden="true">↓</span></a
+            >
+          </div>
+          <p class="micro">
+            No account. No location tracking. Your observations come first.
+          </p>
+        </div>
+        <div class="landscape" id="landscape">
+          <div class="landscape-label">
+            <span>FIELD NOTES / 001</span
+            ><button id="light-toggle" type="button" aria-pressed="false">
+              Switch to dusk
+            </button>
+          </div>
+          <svg
+            viewBox="0 0 800 590"
+            role="img"
+            aria-labelledby="landscape-title"
+          >
+            <title id="landscape-title">
+              An imagined woodland trail winding past three listening stops
+            </title>
+            <defs>
+              <linearGradient id="sky" x2="0" y2="1">
+                <stop stop-color="#f0e4c8" />
+                <stop offset="1" stop-color="#f4eedf" />
+              </linearGradient>
+              <linearGradient id="ground" x2="0.4" y2="1">
+                <stop stop-color="#6f8871" />
+                <stop offset="1" stop-color="#1e4237" />
+              </linearGradient>
+              <pattern
+                id="grain"
+                width="7"
+                height="7"
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx="1" cy="2" r=".6" fill="#203b2d" opacity=".08" />
+              </pattern>
+            </defs>
+            <rect width="800" height="590" fill="url(#sky)" />
+            <circle class="land-sun" cx="590" cy="115" r="54" fill="#d5a461" />
+            <g class="far-ridge">
+              <path d="M0 240Q150 112 320 222T800 168V590H0Z" fill="#c1cbb0" />
+              <path d="M0 282Q190 155 370 258T800 215V590H0Z" fill="#97ad91" />
+            </g>
+            <g class="near-ridge">
+              <path
+                d="M0 335Q200 200 420 330T800 275V590H0Z"
+                fill="url(#ground)"
+              />
+              <path
+                d="M-60 390Q210 255 430 380T900 335M-60 411Q200 280 440 404T900 360M-60 435Q190 310 455 435T900 390M-60 464Q190 340 468 468T900 420M-60 495Q200 370 480 497T900 450M-60 527Q205 405 490 532T900 480M-60 560Q210 440 510 565T900 513"
+                fill="none"
+                stroke="#b6c6a6"
+                stroke-width="1"
+                opacity=".26"
+              />
+            </g>
+            <g class="trees" fill="#183c30">
+              <path
+                d="M120 170l-28 83h17l-24 64h70l-23-64h15ZM180 232l-18 55h12l-19 44h51l-18-44h11ZM694 160l-30 84h17l-25 75h78l-26-75h16ZM746 245l-20 58h12l-18 48h52l-19-48h12Z"
+              />
+              <path d="M114 301h9v33h-9m574-30h10v29h-10" />
+            </g>
+            <path
+              class="trail-base"
+              d="M260 580C245 525 402 522 399 460S231 385 280 337S487 362 523 303S425 250 485 205"
+              fill="none"
+              stroke="#112f27"
+              stroke-width="20"
+              opacity=".18"
+            />
+            <path
+              id="hero-trail"
+              d="M260 580C245 525 402 522 399 460S231 385 280 337S487 362 523 303S425 250 485 205"
+              fill="none"
+              stroke="#e8c58b"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+            <g fill="#f7f1e4" stroke="#395742" stroke-width="3">
+              <circle cx="350" cy="520" r="10" />
+              <circle cx="295" cy="330" r="10" />
+              <circle cx="485" cy="205" r="10" />
+            </g>
+            <g
+              class="map-labels"
+              fill="#f7f1e4"
+              font-family="sans-serif"
+              font-size="11"
+              letter-spacing="2"
+            >
+              <text x="377" y="524">01 / ARRIVE</text>
+              <text x="153" y="336">02 / LISTEN</text>
+              <text x="508" y="210" fill="#294835">03 / RETURN</text>
+            </g>
+            <g id="trail-marker" transform="translate(260 580)">
+              <circle r="13" fill="#f8d18b" opacity=".25" />
+              <circle r="5" fill="#ffe8b8" stroke="#294835" stroke-width="2" />
+            </g>
+            <rect
+              width="800"
+              height="590"
+              fill="url(#grain)"
+              pointer-events="none"
+            />
+          </svg>
+          <div class="landscape-caption">
+            <span
+              ><i class="small-dot"></i> An imagined route. Yours is
+              outside.</span
+            ><span>Scroll to wander ↓</span>
+          </div>
+        </div>
+        <div class="intro-foot">
+          <span>OBSERVE FIRST / AI AFTERWARDS</span
+          ><a href="#ritual"
+            >Make room to listen <span aria-hidden="true">↓</span
+            ><span>OPEN SOURCE · LOCAL AI</span></a
+          >
+        </div>
+      </section>
+      <section class="ritual" id="ritual" aria-labelledby="ritual-title">
+        <div class="section-heading">
+          <p class="eyebrow">A small ritual. A different perspective.</p>
+          <h2 id="ritual-title">
+            Same path.<br /><em>New things to notice.</em>
+          </h2>
+          <p>
+            A listening walk starts with attention. Technology can wait until
+            you get home.
+          </p>
+        </div>
+        <div class="ritual-steps">
+          <article class="ritual-step">
+            <span class="step-number">01</span>
+            <div>
+              <p class="eyebrow">BEFORE YOU GO</p>
+              <h3>Choose the ordinary.</h3>
+              <p>
+                The corner, the trees, the way home. Pick three familiar stops.
+                There is no perfect route to find.
+              </p>
+              <a href="walk.html">Make a pocket journal ↗</a>
+            </div>
+          </article>
+          <article class="ritual-step">
+            <span class="step-number">02</span>
+            <div>
+              <p class="eyebrow">OUT IN THE WORLD</p>
+              <h3>Listen for a minute.</h3>
+              <p>
+                Near or far. Continuous or passing. Keep a few words before
+                looking for labels. A note is enough.
+              </p>
+              <span class="quiet-note">No streaks. No score. No GPS.</span>
+            </div>
+          </article>
+          <article class="ritual-step">
+            <span class="step-number">03</span>
+            <div>
+              <p class="eyebrow">WHEN YOU RETURN</p>
+              <h3>Keep your perspective.</h3>
+              <p>
+                Revisit your notes. In the desktop journal, local AI offers
+                sound candidates from recordings. Replay, question, correct.
+              </p>
+              <a href="#review">Try that decision now ↓</a>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section class="review" id="review">
+        <span class="eyebrow">An open notebook / try it here</span>
+        <h2>Your ears have the final say.</h2>
+        <p>
+          Try one decision from the journal without installing anything. This is
+          a public sample exercise with a
+          <strong>saved real-model result</strong>, not live inference. Your
+          answers stay in this page until reset or reload.
+        </p>
+        <div class="lab" id="review-lab">
+          <div id="sample-start">
+            <h3>1. Listen before seeing a label</h3>
+            <p>
+              This six-second clip is generated noise, not a field recording.
+              Listen and describe its character in your own words.
+            </p>
+            <audio
+              controls
+              preload="metadata"
+              aria-label="Six-second procedural noise sample"
+            >
+              <source src="demo/review-sample.wav" type="audio/wav" /></audio
+            ><label for="sample-observation">Your observation (optional)</label
+            ><textarea
+              id="sample-observation"
+              rows="3"
+              placeholder="What does it sound like? What are you unsure about?"
+            ></textarea
+            ><button id="reveal-candidates" type="button">
+              Reveal the saved suggestions →
+            </button>
+          </div>
+          <div id="sample-review" hidden>
+            <h3 id="sample-review-heading" tabindex="-1">
+              2. Question the suggestion
+            </h3>
+            <p>
+              Your original observation: <span id="original-observation"></span>
+            </p>
+            <div class="candidates">
+              <strong>Saved LAION CLAP candidates</strong>
+              <p>Running water: 0.3168<br />Rain: 0.30821</p>
+              <small>Relative similarity, not confidence</small>
+            </div>
+            <p>
+              The model heard water-like qualities in noise. There was no
+              outdoor stream or rain behind this recording. A plausible match is
+              a reason to listen again, not proof of its source.
+            </p>
+            <audio
+              controls
+              preload="none"
+              aria-label="Replay the same procedural noise"
+            >
+              <source src="demo/review-sample.wav" type="audio/wav" />
+            </audio>
+            <fieldset>
+              <legend>3. Keep your own interpretation</legend>
+              <div class="label-grid" id="review-labels"></div>
+            </fieldset>
+            <label for="review-other">Your own description or correction</label
+            ><input
+              id="review-other"
+              type="text"
+              placeholder="For example: generated hiss; source cannot be inferred"
+            />
+            <fieldset class="judgments">
+              <legend>Separate judgments</legend>
+              <label
+                ><input id="review-none" type="checkbox" />None of the
+                vocabulary fits</label
+              ><label
+                ><input id="review-mixed" type="checkbox" />Several sounds
+                overlap</label
+              ><label
+                ><input id="review-uncertain" type="checkbox" />I am
+                uncertain</label
+              >
+            </fieldset>
+            <button id="save-review" type="button">Show my review →</button>
+          </div>
+          <div id="review-summary" hidden>
+            <h3 id="review-summary-heading" tabindex="-1">
+              Your observation and AI remain separate.
+            </h3>
+            <p>
+              This preview records your decision without changing the saved
+              machine candidates. It is a sample exercise, not a saved visit in
+              the full app.
+            </p>
+            <pre id="review-result"></pre>
+          </div>
+          <p
+            id="review-status"
+            class="sample-status"
+            role="status"
+            aria-live="polite"
+          ></p>
+          <button id="reset-review" type="button">Reset this sample</button>
+          <details>
+            <summary>Where did the audio and result come from?</summary>
+            <p>
+              Original CC0 procedural noise, six seconds, seed 20261007. Actual
+              offline CLAP run, pinned revision
+              8fa0f1c6d0433df6e97c127f64b2a1d6c0dcda8a, vocabulary v2, interval
+              0–6 seconds. No private recordings are published.
+            </p>
+            <a href="demo/review-sample.md">Provenance and limits</a> ·
+            <a href="benchmark-model-v2.json">Recorded model output</a>
+          </details>
+        </div>
+        <div class="review-guide">
+          <h3>A journal that comes with you.</h3>
+          <p>
+            The free phone-friendly journal saves your written observations in
+            this browser. Return to the same stops, compare visits and export
+            your notes.
+          </p>
+          <a class="button" href="walk.html">Start your three-stop walk ↗</a>
+          <ol>
+            <li>
+              Choose three familiar stops. Put the screen away and listen for a
+              minute at each.
+            </li>
+            <li>
+              Write one observation before using AI. A recording is optional; a
+              note alone is complete.
+            </li>
+            <li>
+              Back home, replay and review. Record whether a suggestion added
+              something useful or needed rejecting.
+            </li>
+          </ol>
+          <p>
+            We have not completed an outdoor trial.
+            <a href="FIELD-TRIAL.md">Use the blank field-trial worksheet</a> to
+            document a real walk. The
+            <a href="USEFULNESS-REVIEW.md">development review</a> includes
+            relevant matches and known failures.
+          </p>
+        </div>
+      </section>
+      <section class="demo" id="demo">
+        <h2>A working journal, honestly demonstrated.</h2>
+        <p>
+          72-second edited walkthrough made from captured application screens.
+          All journal audio shown is procedural synthetic data. It is not an
+          outdoor trial or independent accuracy evaluation.
+        </p>
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          poster="premium-hero.png"
+          aria-label="Soundwalk Atlas captioned synthetic UI walkthrough"
+        >
+          <source src="demo/soundwalk-atlas-demo.mp4" type="video/mp4" />
+          <p>
+            <a href="demo/soundwalk-atlas-demo.mp4"
+              >Download the captioned demo video</a
+            >
+          </p>
+        </video>
+        <p>
+          <a href="demo/TRANSCRIPT.md">Read the demo transcript</a> ·
+          <a href="demo/soundwalk-atlas-demo.mp4" download>Download video</a>
+        </p>
+        <div class="note">
+          The pocket journal saves written notes in this browser. It does not
+          sync to the desktop app. For private recording import, AI review and
+          audio backups, run the full application on your Mac using the
+          repository instructions; those records and inference stay on that
+          computer.
+        </div>
+      </section>
+      <section class="boundaries" aria-label="Project principles">
+        <div>
+          <h3>Listen before you label</h3>
+          <p>
+            Written notes work without audio. Model candidates never become
+            human labels automatically. Reject, correct or preserve uncertainty.
+          </p>
+        </div>
+        <div>
+          <h3>Open, local inference</h3>
+          <p>
+            A pinned LAION CLAP model runs from prepared local assets. A
+            one-time download is necessary. Candidate similarities are not
+            confidence or sound-level measurements.
+          </p>
+        </div>
+        <div>
+          <h3>Return with curiosity</h3>
+          <p>
+            Compare observations at the same stops. Private ZIP backups preserve
+            audio and reviews. Synthetic samples demonstrate these features
+            without inventing field results.
+          </p>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <span>Soundwalk Atlas · Yash Anand</span
+      ><a
+        href="https://github.com/YashAnand69/soundwalk-atlas/blob/main/README.md"
+        >Setup, licenses and AI assistance disclosure ↗</a
+      >
+    </footer>
+    <noscript
+      ><p class="note">
+        JavaScript is needed for the interactive review and pocket journal. The
+        <a href="FIELD-TRIAL.md">printable listening worksheet</a> and recorded
+        demo remain available.
+      </p></noscript
+    >
+    <script src="demo/review-sample.js" defer></script>
+    <script src="atlas.js?v=20261011" defer></script>
+  </body>
 </html>

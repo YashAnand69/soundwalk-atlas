@@ -1202,3 +1202,99 @@ select {
     min-height: 44px;
   }
 }
+
+/* The journal remains immediately reachable beyond the illustrated introduction. */
+.skip-journal {
+  position: fixed;
+  z-index: 100;
+  left: 20px;
+  top: 12px;
+  transform: translateY(-180%);
+  padding: 12px 18px;
+  background: #243e32;
+  color: #fff;
+  border-radius: 8px;
+}
+.skip-journal:focus {
+  transform: translateY(0);
+}
+.header-journal {
+  margin-left: auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+#journal-workspace {
+  scroll-margin-top: 28px;
+}
+.first-walk-steps {
+  max-width: 520px;
+  margin: 30px auto;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  counter-reset: first-step;
+}
+.first-walk-steps li {
+  counter-increment: first-step;
+  position: relative;
+  padding: 0 0 22px 44px;
+}
+.first-walk-steps li::before {
+  content: counter(first-step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 13px;
+  color: #7b6744;
+}
+.first-walk-steps b,
+.first-walk-steps span {
+  display: block;
+}
+.first-walk-steps b {
+  font-size: 16px;
+  margin-bottom: 5px;
+  color: #293f33;
+}
+.first-walk-steps span {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #59634f;
+}
+.observation-extras {
+  margin: 4px 0 14px;
+}
+.observation-extras summary {
+  cursor: pointer;
+  font-size: 13px;
+  padding: 10px 0;
+  color: #465843;
+}
+.observation-extras summary span {
+  color: #656950;
+}
+.observation-extras[open] .observation-context {
+  padding-top: 8px;
+}
+@media (max-width: 640px) {
+  .header-journal {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .first-walk-steps {
+    margin: 24px 0;
+  }
+  .first-walk-steps li {
+    padding-left: 34px;
+  }
+  .observation-extras summary {
+    min-height: 44px;
+    display: list-item;
+  }
+}
+@media print {
+  .header-journal,
+  .skip-journal {
+    display: none;
+  }
+}

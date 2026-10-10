@@ -55,10 +55,11 @@ export default function App() {
     window.requestAnimationFrame(() => {
       const target = prepare ? preparation.current : workspace.current;
       target?.scrollIntoView({
-        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")
-          .matches
-          ? "instant"
-          : "smooth",
+        behavior:
+          motionPaused ||
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+            ? "instant"
+            : "smooth",
         block: "start",
       });
       if (prepare)
@@ -71,9 +72,11 @@ export default function App() {
   function selectStation(id: string) {
     const target = document.getElementById("station-" + id);
     target?.scrollIntoView({
-      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
+      behavior:
+        motionPaused ||
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
       block: "start",
     });
     target?.focus({ preventScroll: true });
@@ -87,32 +90,23 @@ export default function App() {
   const hasObservation = !!state.observations?.some(
     (o) => o.visitId === visitId && o.note.trim(),
   );
-  const visitClips = state.clips.filter((c) => c.visitId === visitId);
   const nextAction = !route
     ? "Prepare your first walk"
     : !visit
       ? "Start a visit"
       : !hasObservation
         ? "Save your first written observation"
-        : !visitClips.length
-          ? "Import an optional recording"
-          : pendingReviews
-            ? `Review ${pendingReviews} recording${pendingReviews === 1 ? "" : "s"}`
-            : visits.length < 2
-              ? "Return for another visit"
-              : "Compare your visits";
+        : pendingReviews
+          ? `Review ${pendingReviews} recording${pendingReviews === 1 ? "" : "s"}`
+          : visits.length < 2
+            ? "Return for another visit"
+            : "Compare your visits";
   function followNextAction() {
     if (!route) {
       openWorkspace(true);
       return;
     }
-    if (
-      visit &&
-      hasObservation &&
-      visitClips.length &&
-      !pendingReviews &&
-      visits.length > 1
-    ) {
+    if (visit && hasObservation && !pendingReviews && visits.length > 1) {
       setTab("compare");
       setCompareId(visits.find((v) => v.id !== visitId)?.id || "");
       openWorkspace();
@@ -122,20 +116,19 @@ export default function App() {
     openWorkspace();
     window.requestAnimationFrame(() => {
       const selector =
-        !visit || (hasObservation && visitClips.length && !pendingReviews)
+        !visit || (hasObservation && !pendingReviews)
           ? ".visit-controls input"
           : !hasObservation
             ? ".observation-editor textarea"
-            : !visitClips.length
-              ? ".upload input[type=file]"
-              : ".review input";
+            : '.clip[data-reviewed="false"] .review input';
       const target = workspace.current?.querySelector<HTMLElement>(selector);
       target?.scrollIntoView({
         block: "center",
-        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")
-          .matches
-          ? "instant"
-          : "smooth",
+        behavior:
+          motionPaused ||
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+            ? "instant"
+            : "smooth",
       });
       target?.focus({ preventScroll: true });
     });
@@ -315,6 +308,9 @@ export default function App() {
       className={`app ${focus ? "focus-mode" : ""} ${motionPaused ? "motion-paused" : ""}`}
     >
       <div className="reading-progress" aria-hidden="true" />
+      <a className="skip-journal" href="#journal-workspace">
+        Skip to your journal
+      </a>
       <header>
         <a className="brand" href="#">
           <span className="brand-icon">◌</span> Soundwalk <em>Atlas</em>
@@ -322,6 +318,12 @@ export default function App() {
         <span className="header-edition" aria-hidden="true">
           A PERSONAL FIELD GUIDE / VOL. 01
         </span>
+        <button
+          className="header-journal text-button"
+          onClick={() => openWorkspace()}
+        >
+          Open journal <span aria-hidden="true">↗</span>
+        </button>
         <div className="privacy">
           <span /> Local & private
         </div>
@@ -366,8 +368,9 @@ export default function App() {
               Your listening journal is ready. The local AI model isn’t yet.
             </b>
             <span>
-              {config.model.status}. You can prepare walks, import audio and
-              review manually. Follow the README’s model setup before analysing.
+              {config.model.status}. Written notes and revisits work now,
+              without AI. You can also import audio and review manually. Follow
+              the README’s model setup before analysing.
             </span>
           </div>
         ) : (
@@ -382,7 +385,11 @@ export default function App() {
           <span>03 Import</span>
           <span>04 Review</span>
           <span>05 Compare</span>
-          <button className="next-action" onClick={followNextAction}>
+          <button
+            className="next-action"
+            disabled={!config}
+            onClick={followNextAction}
+          >
             {nextAction} →
           </button>
           <button className="text-button" onClick={() => setFocus(!focus)}>
@@ -499,7 +506,12 @@ export default function App() {
           Private backup includes your original audio and notes. Keep it
           private. JSON export contains records only.
         </p>
-        <div className="workspace" ref={workspace} tabIndex={-1}>
+        <div
+          className="workspace"
+          id="journal-workspace"
+          ref={workspace}
+          tabIndex={-1}
+        >
           <aside>
             <p className="eyebrow">YOUR PLACES</p>
             {state.routes.map((r) => (
@@ -575,9 +587,36 @@ export default function App() {
                 <span>◌</span>
                 <h2>Your first walk starts here.</h2>
                 <p>
-                  Pick three familiar places. Bring a listening card, not
-                  another feed.
+                  Start small: one familiar place and a minute of listening,
+                  seated or on a short walk. A written note is a complete entry.
+                  Audio and AI are optional.
                 </p>
+                <ol className="first-walk-steps">
+                  <li>
+                    <b>Choose a place</b>
+                    <span>Name one to five stops in the card beside you.</span>
+                  </li>
+                  <li>
+                    <b>Listen without a screen</b>
+                    <span>
+                      Print the card, or remember one question: what can I hear?
+                    </span>
+                  </li>
+                  <li>
+                    <b>Keep one observation</b>
+                    <span>
+                      Start a visit when you return. Come back another day to
+                      notice what changed.
+                    </span>
+                  </li>
+                </ol>
+                <button
+                  className="primary"
+                  disabled={!config}
+                  onClick={() => openWorkspace(true)}
+                >
+                  Make my listening card
+                </button>
               </div>
             ) : (
               <>
@@ -652,7 +691,7 @@ export default function App() {
                       className={"walk-card " + (focus ? "compact-card" : "")}
                     >
                       <div className="card-top">
-                        <b>Before you press record</b>
+                        <b>Before you write or record</b>
                         <span>LEAVE THE SCREEN BEHIND</span>
                       </div>
                       <p>
@@ -664,7 +703,7 @@ export default function App() {
                         {route.stops.map((s) => (
                           <li key={s.id}>
                             {s.name}
-                            <small>Listen → notice → record 10 seconds</small>
+                            <small>Listen → notice → optional recording</small>
                           </li>
                         ))}
                       </ol>
@@ -1168,25 +1207,36 @@ function ObservationEditor({
           placeholder="Near sounds, far sounds, something unexpected…"
         />
       </label>
-      <div className="observation-context">
-        <label>
-          Observed at
-          <input
-            type="datetime-local"
-            value={value.observedAt}
-            onChange={(e) => setValue({ ...value, observedAt: e.target.value })}
-          />
-        </label>
-        <label>
-          Conditions / context
-          <input
-            value={value.context}
-            maxLength={500}
-            placeholder="After rain, quiet morning…"
-            onChange={(e) => setValue({ ...value, context: e.target.value })}
-          />
-        </label>
-      </div>
+      <details className="observation-extras">
+        <summary>
+          Add time or conditions <span>(optional)</span>
+        </summary>
+        <div className="observation-context">
+          <label>
+            Observed at
+            <input
+              type="datetime-local"
+              value={value.observedAt}
+              onChange={(e) => {
+                setValue({ ...value, observedAt: e.target.value });
+                setSaved(false);
+              }}
+            />
+          </label>
+          <label>
+            Conditions / context
+            <input
+              value={value.context}
+              maxLength={500}
+              placeholder="After rain, quiet morning…"
+              onChange={(e) => {
+                setValue({ ...value, context: e.target.value });
+                setSaved(false);
+              }}
+            />
+          </label>
+        </div>
+      </details>
       <button className="secondary" disabled={saving || !value.note.trim()}>
         {saving ? "Saving note…" : "Save written observation"}
       </button>
@@ -1450,7 +1500,7 @@ function ClipCard({
     setSaved(false);
   };
   return (
-    <article className="clip">
+    <article className="clip" data-reviewed={!!clip.review}>
       <div className="clip-head">
         <strong>{clip.filename}</strong>
         <span>

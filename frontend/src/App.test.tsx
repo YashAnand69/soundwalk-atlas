@@ -278,7 +278,7 @@ describe("recording drafts", () => {
     await screen.findByText("morning.wav");
     fireEvent.click(screen.getByRole("button", { name: /Compare visits/ }));
     const print = vi.spyOn(window, "print").mockImplementation(() => {
-      expect(screen.getByText("Before you press record")).toBeTruthy();
+      expect(screen.getByText("Before you write or record")).toBeTruthy();
     });
     fireEvent.click(screen.getByRole("button", { name: "Print card ↗" }));
     expect(print).toHaveBeenCalledTimes(1);
@@ -632,5 +632,63 @@ describe("portable backup confirmation", () => {
     expect(fetch.mock.calls.some(([url]) => url === "/api/restore")).toBe(
       false,
     );
+  });
+});
+
+describe("notes-first navigation", () => {
+  it("offers comparison after a written observation without requiring audio", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/config")
+          return Response.json({
+            token: "secret",
+            model: { ready: false, status: "Model not installed" },
+            limits: { maxBytes: 20971520, maxDuration: 30 },
+            version: "1",
+          });
+        return Response.json({
+          routes: [route],
+          visits: [
+            { id: "v1", routeId: "r", title: "Morning", createdAt: "now" },
+            { id: "v2", routeId: "r", title: "Evening", createdAt: "now" },
+          ],
+          clips: [],
+          observations: [
+            {
+              id: "o1",
+              visitId: "v1",
+              stopId: "s1",
+              note: "The leaves were louder today",
+              context: "",
+              observedAt: "",
+            },
+          ],
+        });
+      }),
+    );
+    render(<App />);
+    expect(
+      await screen.findByRole("button", { name: "Compare your visits →" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: /Import an optional recording/ }),
+    ).toBeNull();
+  });
+
+  it("clears the saved indicator when optional observation details change", async () => {
+    setup();
+    await screen.findByRole("heading", { name: "Park loop" });
+    fireEvent.change(screen.getAllByLabelText("Written listening note")[0], {
+      target: { value: "Rustling leaves" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Save written observation" })[0],
+    );
+    await screen.findByText("Written observation saved");
+    fireEvent.change(screen.getAllByLabelText("Conditions / context")[0], {
+      target: { value: "After rain" },
+    });
+    expect(screen.queryByText("Written observation saved")).toBeNull();
   });
 });
