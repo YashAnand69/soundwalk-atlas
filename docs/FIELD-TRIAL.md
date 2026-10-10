@@ -2,6 +2,20 @@
 
 This is a practical protocol, not completed field evidence. The bundled WAVs are generated synthetic demonstrations. They do not establish outdoor usability or model accuracy.
 
+## A first walk: three stops, no experiment required
+
+A single walk can establish whether the workflow is usable; it cannot establish accuracy or a change in habits. Before using AI, write one sentence at each stop about what you noticed. Back home, compare it with the suggestions and write what helped, what failed and what you would change. One truthful failure is more useful than an invented success. A second visit tests the comparison feature and can follow later.
+
+Report template:
+
+- Why I chose this route (broad context, no precise location needed):
+- Stop 1: original note; recording or no recording; AI suggestion; my correction and reason:
+- Stop 2: original note; recording or no recording; AI suggestion; my correction and reason:
+- Stop 3: original note; recording or no recording; AI suggestion; my correction and reason:
+- What I noticed because I stopped to listen:
+- Where the workflow got in my way:
+- What I am willing to share publicly (notes, audio, images, or none):
+
 ## Before leaving
 
 1. Choose three familiar, publicly accessible stops. Avoid traffic, private property and places where stopping or recording is inappropriate. The application is not a navigation or safety service.

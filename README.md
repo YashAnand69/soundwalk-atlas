@@ -4,7 +4,7 @@ A short listening walk. A private local audio model. A second visit that helps y
 
 ![Soundwalk Atlas interface](docs/premium-hero.png)
 
-Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. No real outdoor trial or contest entry is claimed.
+Built October 2026 with Codex and research/build subagents. This is an original Hacktoberfest Week 1 project, separate from upstream contribution PRs. The Week 1 entry is published; a real outdoor trial remains unperformed.
 
 ## The experience
 
